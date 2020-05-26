@@ -18,10 +18,10 @@ public class ResponseEntity<T> {
     }
 
     public static <T> ResponseEntity<T> success(T data) {
-        return new ResponseEntity<T>(true, "success", HttpStatus.OK, data);
+        return new ResponseEntity<>(true, "success", HttpStatus.OK, data);
     }
 
     public static <T> ResponseEntity<T> error(String message) {
-        return new ResponseEntity<T>(false, message, HttpStatus.OK, null);
+        return new ResponseEntity<>(false, message, HttpStatus.OK, null);
     }
 }
