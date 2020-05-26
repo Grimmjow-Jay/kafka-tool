@@ -6,6 +6,7 @@ import com.grimmjow.kafkatool.entity.ClusterPool;
 import com.grimmjow.kafkatool.entity.KafkaNode;
 import com.grimmjow.kafkatool.entity.KafkaTopic;
 import com.grimmjow.kafkatool.entity.KafkaTopicPartition;
+import com.grimmjow.kafkatool.entity.request.CreateTopicRequest;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.service.TopicService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +15,8 @@ import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +32,7 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public Set<String> topics(String clusterName) {
-        BaseException.assertTrue(StringUtils.isEmpty(clusterName), "集群名为空");
+        BaseException.assertEmpty(clusterName, "集群名为空");
 
         AdminClient kafkaAdminClient = ClusterPool.getAdminClient(clusterName);
         ListTopicsResult listTopicsResult = kafkaAdminClient.listTopics(new ListTopicsOptions().listInternal(true));
@@ -46,8 +47,8 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public KafkaTopic detail(String clusterName, String topic) {
-        BaseException.assertTrue(StringUtils.isEmpty(clusterName), "集群名为空");
-        BaseException.assertTrue(StringUtils.isEmpty(topic), "Topic为空");
+        BaseException.assertEmpty(clusterName, "集群名为空");
+        BaseException.assertEmpty(topic, "Topic为空");
 
         AdminClient kafkaAdminClient = ClusterPool.getAdminClient(clusterName);
         DescribeTopicsResult describeTopicsResult = kafkaAdminClient.describeTopics(Lists.newArrayList(topic));
@@ -83,5 +84,30 @@ public class TopicServiceImpl implements TopicService {
         topicPartitionOffsetsMap.forEach((k, v) -> partitionMap.get(k.partition()).setOffset(v.offset()));
 
         return new KafkaTopic(topicDescription.name(), topicDescription.isInternal(), partitionList);
+    }
+
+    @Override
+    public void createTopic(CreateTopicRequest request) {
+        BaseException.assertNull(request, "请求参数为空");
+        String clusterName = request.getClusterName();
+        String topic = request.getTopic();
+        int partition = request.getPartition();
+        int replication = request.getReplication();
+
+        BaseException.assertEmpty(clusterName, "集群名为空");
+        BaseException.assertEmpty(topic, "Topic为空");
+        BaseException.assertCondition(partition < 1, "分区数不合法");
+        BaseException.assertCondition(replication < 1 || replication > Short.MAX_VALUE, "副本数不合法");
+
+        AdminClient kafkaAdminClient = ClusterPool.getAdminClient(clusterName);
+
+        ArrayList<NewTopic> newTopics = Lists.newArrayList(new NewTopic(topic, partition, (short) replication));
+        CreateTopicsResult createTopicsResult = kafkaAdminClient.createTopics(newTopics);
+        try {
+            createTopicsResult.all().get();
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("创建Topic异常", e);
+            throw new BaseException("创建Topic异常:" + e.getMessage());
+        }
     }
 }

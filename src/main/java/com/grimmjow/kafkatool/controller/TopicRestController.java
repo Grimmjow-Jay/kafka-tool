@@ -1,12 +1,11 @@
 package com.grimmjow.kafkatool.controller;
 
 import com.grimmjow.kafkatool.entity.KafkaTopic;
-import com.grimmjow.kafkatool.entity.ResponseEntity;
+import com.grimmjow.kafkatool.entity.request.CreateTopicRequest;
+import com.grimmjow.kafkatool.entity.response.Empty;
+import com.grimmjow.kafkatool.entity.response.ResponseEntity;
 import com.grimmjow.kafkatool.service.TopicService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
@@ -33,6 +32,12 @@ public class TopicRestController {
     public ResponseEntity<KafkaTopic> detail(@RequestParam("clusterName") String clusterName,
                                              @RequestParam("topic") String topic) {
         return ResponseEntity.success(topicService.detail(clusterName, topic));
+    }
+
+    @PostMapping
+    public ResponseEntity<Empty> createTopic(@RequestBody CreateTopicRequest createTopicRequest) {
+        topicService.createTopic(createTopicRequest);
+        return ResponseEntity.success();
     }
 
 }

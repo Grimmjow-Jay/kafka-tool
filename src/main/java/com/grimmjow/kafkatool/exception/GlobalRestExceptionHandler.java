@@ -1,7 +1,7 @@
 package com.grimmjow.kafkatool.exception;
 
-import com.grimmjow.kafkatool.entity.Empty;
-import com.grimmjow.kafkatool.entity.ResponseEntity;
+import com.grimmjow.kafkatool.entity.response.Empty;
+import com.grimmjow.kafkatool.entity.response.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

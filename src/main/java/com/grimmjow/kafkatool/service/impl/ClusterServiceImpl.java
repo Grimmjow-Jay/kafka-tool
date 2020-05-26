@@ -11,7 +11,6 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -32,8 +31,8 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public void addCluster(Cluster cluster) {
-        BaseException.assertTrue(cluster == null, "集群为空");
-        BaseException.assertTrue(StringUtils.isEmpty(cluster.getClusterName()), "集群名为空");
+        BaseException.assertNull(cluster, "集群为空");
+        BaseException.assertEmpty(cluster.getClusterName(), "集群名为空");
         try (AdminClient kafkaAdminClient = ClusterPool.connect(cluster)) {
             KafkaFuture<String> clusterIdFuture = kafkaAdminClient.describeCluster().clusterId();
             String clusterId = clusterIdFuture.get();

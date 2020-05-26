@@ -46,7 +46,7 @@ public class ClusterPool {
 
     public static void addCluster(Cluster cluster) {
         String clusterName = cluster.getClusterName();
-        BaseException.assertTrue(clusterMap.containsKey(clusterName), "集群名已存在");
+        BaseException.assertCondition(clusterMap.containsKey(clusterName), "集群名已存在");
         clusterMap.put(clusterName, cluster);
         saveCluster();
     }
@@ -74,7 +74,7 @@ public class ClusterPool {
 
     public static AdminClient getAdminClient(String clusterName) {
         Cluster cluster = clusterMap.get(clusterName);
-        BaseException.assertTrue(cluster == null, "集群不存在");
+        BaseException.assertNull(cluster, "集群不存在");
         return pool.computeIfAbsent(clusterName, e -> connect(cluster));
     }
 

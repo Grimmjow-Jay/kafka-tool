@@ -1,4 +1,4 @@
-package com.grimmjow.kafkatool.entity;
+package com.grimmjow.kafkatool.entity.response;
 
 import lombok.Data;
 import org.springframework.http.HttpStatus;
@@ -19,6 +19,10 @@ public class ResponseEntity<T> {
 
     public static <T> ResponseEntity<T> success(T data) {
         return new ResponseEntity<>(true, "success", HttpStatus.OK.value(), data);
+    }
+
+    public static ResponseEntity<Empty> success() {
+        return new ResponseEntity<>(true, "success", HttpStatus.OK.value(), new Empty());
     }
 
     public static ResponseEntity<Empty> error(String message, int code) {
