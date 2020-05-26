@@ -14,7 +14,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -25,17 +24,16 @@ public class ClusterPool {
 
     private static final String CLUSTER_JSON = "cluster.json";
     private static final File CLUSTER_JSON_FILE;
-    private static List<Cluster> clusterList;
     private static Map<String, Cluster> clusterMap;
     private static Map<String, AdminClient> pool;
 
     static {
         CLUSTER_JSON_FILE = new File(ConstantConfig.DATA_PATH, CLUSTER_JSON);
-        clusterList = CLUSTER_JSON_FILE.exists()
-                ? JsonUtil.loadToList(CLUSTER_JSON_FILE, Cluster.class)
-                : Lists.newArrayList();
-        clusterMap = Maps.newConcurrentMap();
-        clusterList.forEach(e -> clusterMap.put(e.getClusterName(), e));
+        clusterMap = Maps.newLinkedHashMap();
+        if (CLUSTER_JSON_FILE.exists() && CLUSTER_JSON_FILE.isFile()) {
+            List<Cluster> clusterList = JsonUtil.loadToList(CLUSTER_JSON_FILE, Cluster.class);
+            clusterList.forEach(e -> clusterMap.put(e.getClusterName(), e));
+        }
         pool = Maps.newConcurrentMap();
     }
 
@@ -43,28 +41,19 @@ public class ClusterPool {
     }
 
     public static synchronized List<Cluster> getClusterList() {
-        return clusterList;
+        return Lists.newArrayList(clusterMap.values());
     }
-
-    public static Cluster getCluster(String clusterName) {
-        Cluster cluster = clusterMap.get(clusterName);
-        if (cluster != null) {
-            return cluster;
-        }
-        throw new BaseException("集群: " + clusterName + " 不存在");
-    }
-
 
     public static void addCluster(Cluster cluster) {
-        boolean nameExist = checkClusterNameExist(cluster.getClusterName());
-        BaseException.assertTrue(nameExist, "集群名已存在");
-        clusterList.add(cluster);
+        String clusterName = cluster.getClusterName();
+        BaseException.assertTrue(clusterMap.containsKey(clusterName), "集群名已存在");
+        clusterMap.put(clusterName, cluster);
         saveCluster();
     }
 
     public static void removeCluster(String clusterName) {
-        boolean removed = clusterList.removeIf(cluster -> Objects.equals(cluster.getClusterName(), clusterName));
-        if (removed) {
+        Cluster cluster = clusterMap.get(clusterName);
+        if (cluster != null) {
             clusterMap.remove(clusterName);
             saveCluster();
             AdminClient client = pool.get(clusterName);
@@ -75,27 +64,18 @@ public class ClusterPool {
         }
     }
 
-    private static boolean checkClusterNameExist(String clusterName) {
-        return clusterMap.containsKey(clusterName);
-    }
-
     private static void saveCluster() {
         try (FileWriter writer = new FileWriter(CLUSTER_JSON_FILE, false)) {
-            writer.write(JsonUtil.objToJson(clusterList));
+            writer.write(JsonUtil.objToJson(clusterMap.values()));
         } catch (IOException e) {
             throw new BaseException(e);
         }
     }
 
     public static AdminClient getAdminClient(String clusterName) {
-        boolean nameExist = checkClusterNameExist(clusterName);
-        BaseException.assertTrue(!nameExist, "集群不存在");
-        AdminClient adminClient = pool.get(clusterName);
-        if (adminClient == null) {
-            adminClient = connect(getCluster(clusterName));
-            pool.put(clusterName, adminClient);
-        }
-        return adminClient;
+        Cluster cluster = clusterMap.get(clusterName);
+        BaseException.assertTrue(cluster == null, "集群不存在");
+        return pool.computeIfAbsent(clusterName, e -> connect(cluster));
     }
 
     public static AdminClient connect(Cluster cluster) {

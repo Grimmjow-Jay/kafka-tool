@@ -1,5 +1,6 @@
 package com.grimmjow.kafkatool.exception;
 
+import com.grimmjow.kafkatool.entity.Empty;
 import com.grimmjow.kafkatool.entity.ResponseEntity;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,8 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 public class HttpErrorHandler implements ErrorController {
 
     @RequestMapping(value = "/error")
-    public ResponseEntity<String> errorHandler() {
-        return ResponseEntity.error("error");
+    public ResponseEntity<Empty> errorHandler(HttpServletResponse response) {
+        return ResponseEntity.error("error", response.getStatus());
     }
 
     @Override

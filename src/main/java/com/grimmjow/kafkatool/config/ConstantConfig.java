@@ -12,6 +12,6 @@ public class ConstantConfig {
 
     static {
         String dataDirEnv = System.getProperty("data.dir");
-        DATA_PATH = StringUtils.isEmpty(dataDirEnv) ? System.getProperty("data.dir") : dataDirEnv;
+        DATA_PATH = StringUtils.isEmpty(dataDirEnv) ? System.getProperty("java.io.tmpdir") : dataDirEnv;
     }
 }

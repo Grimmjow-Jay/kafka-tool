@@ -10,18 +10,18 @@ public class ResponseEntity<T> {
     private int code;
     private T data;
 
-    public ResponseEntity(boolean success, String message, HttpStatus httpStatus, T data) {
+    public ResponseEntity(boolean success, String message, int code, T data) {
         this.success = success;
         this.message = message;
-        this.code = httpStatus.value();
+        this.code = code;
         this.data = data;
     }
 
     public static <T> ResponseEntity<T> success(T data) {
-        return new ResponseEntity<>(true, "success", HttpStatus.OK, data);
+        return new ResponseEntity<>(true, "success", HttpStatus.OK.value(), data);
     }
 
-    public static <T> ResponseEntity<T> error(String message) {
-        return new ResponseEntity<>(false, message, HttpStatus.OK, null);
+    public static ResponseEntity<Empty> error(String message, int code) {
+        return new ResponseEntity<>(false, message, code, null);
     }
 }

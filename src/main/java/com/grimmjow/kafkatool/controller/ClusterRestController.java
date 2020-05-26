@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("cluster")
 public class ClusterRestController {
 
     private final ClusterService clusterService;
@@ -17,24 +18,24 @@ public class ClusterRestController {
         this.clusterService = clusterService;
     }
 
-    @RequestMapping("clusters")
+    @RequestMapping("list")
     public ResponseEntity<List<Cluster>> clusters() {
         return ResponseEntity.success(clusterService.clusters());
     }
 
-    @PostMapping("cluster")
+    @PostMapping
     public ResponseEntity<Boolean> addCluster(@RequestBody Cluster cluster) {
         clusterService.addCluster(cluster);
         return ResponseEntity.success(true);
     }
 
-    @DeleteMapping("cluster")
+    @DeleteMapping
     public ResponseEntity<Boolean> removeCluster(@RequestParam("clusterName") String clusterName) {
         clusterService.removeCluster(clusterName);
         return ResponseEntity.success(true);
     }
 
-    @GetMapping("/cluster/nodes")
+    @GetMapping("/nodes")
     public ResponseEntity<List<KafkaNode>> listNodes(@RequestParam("clusterName") String clusterName) {
         return ResponseEntity.success(clusterService.listNodes(clusterName));
     }

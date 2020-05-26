@@ -2,10 +2,13 @@ package com.grimmjow.kafkatool.service;
 
 import com.grimmjow.kafkatool.entity.Cluster;
 import com.grimmjow.kafkatool.entity.KafkaNode;
-import org.apache.kafka.common.Node;
 
 import java.util.List;
 
+/**
+ * @author Grimm
+ * @since 2020/5/26
+ */
 public interface ClusterService {
 
     List<Cluster> clusters();
