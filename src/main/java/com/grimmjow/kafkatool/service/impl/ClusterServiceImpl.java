@@ -42,6 +42,7 @@ public class ClusterServiceImpl implements ClusterService {
             String clusterId = clusterIdFuture.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
             log.info("添加集群：" + clusterId);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            log.info("添加集群失败", e);
             throw new BaseException("添加集群失败:" + e.getMessage(), e);
         }
 
@@ -61,6 +62,7 @@ public class ClusterServiceImpl implements ClusterService {
         try {
             nodeCollection = nodesFuture.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            log.info("获取集群节点失败", e);
             throw new BaseException("获取集群节点失败:" + e.getMessage());
         }
         List<KafkaNode> kafkaNodeList = Lists.newArrayList();

@@ -1,5 +1,6 @@
 package com.grimmjow.kafkatool.controller;
 
+import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
 import com.grimmjow.kafkatool.entity.response.ResponseEntity;
 import com.grimmjow.kafkatool.service.ConsumerService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,13 +24,13 @@ public class ConsumerRestController {
         this.consumerService = consumerService;
     }
 
-    @GetMapping("/{clusterName}")
+    @GetMapping("/consumers/{clusterName}")
     public ResponseEntity<List<String>> consumers(@PathVariable String clusterName) {
         return ResponseEntity.success(consumerService.consumers(clusterName));
     }
 
     @GetMapping("/offsets/{clusterName}/{consumerName}")
-    public ResponseEntity<List<String>> offsets(@PathVariable String clusterName, @PathVariable String consumerName) {
+    public ResponseEntity<List<ConsumerTopicOffset>> offsets(@PathVariable String clusterName, @PathVariable String consumerName) {
         return ResponseEntity.success(consumerService.offsets(clusterName, consumerName));
     }
 

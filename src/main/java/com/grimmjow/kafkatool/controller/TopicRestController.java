@@ -28,7 +28,7 @@ public class TopicRestController {
         return ResponseEntity.success(topicService.topics(clusterName));
     }
 
-    @GetMapping("/{clusterName}/{topic}")
+    @GetMapping("/detail/{clusterName}/{topic}")
     public ResponseEntity<KafkaTopic> detail(@PathVariable("clusterName") String clusterName,
                                              @PathVariable("topic") String topic) {
         return ResponseEntity.success(topicService.detail(clusterName, topic));

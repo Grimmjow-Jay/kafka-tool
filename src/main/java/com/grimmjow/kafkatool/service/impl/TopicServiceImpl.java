@@ -54,8 +54,8 @@ public class TopicServiceImpl implements TopicService {
         BaseException.assertBlank(clusterName, "集群名为空");
         BaseException.assertBlank(topic, "Topic为空");
 
-        AdminClient kafkaAdminClient = ClusterPool.getAdminClient(clusterName);
-        DescribeTopicsResult describeTopicsResult = kafkaAdminClient.describeTopics(Lists.newArrayList(topic));
+        AdminClient adminClient = ClusterPool.getAdminClient(clusterName);
+        DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(Lists.newArrayList(topic));
         KafkaFuture<TopicDescription> topicFutureMap = describeTopicsResult.values().get(topic);
         TopicDescription topicDescription;
         try {
@@ -77,7 +77,7 @@ public class TopicServiceImpl implements TopicService {
             partitionMap.put(partitionInfo.partition(), kafkaTopicPartition);
             topicPartitionOffsets.put(new TopicPartition(topic, partitionInfo.partition()), OffsetSpec.latest());
         }
-        ListOffsetsResult listOffsetsResult = kafkaAdminClient.listOffsets(topicPartitionOffsets);
+        ListOffsetsResult listOffsetsResult = adminClient.listOffsets(topicPartitionOffsets);
         Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> topicPartitionOffsetsMap;
         try {
             topicPartitionOffsetsMap = listOffsetsResult.all().get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
