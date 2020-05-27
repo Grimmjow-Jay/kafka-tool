@@ -88,7 +88,6 @@ public class ConsumerServiceImpl implements ConsumerService {
         listOffsetsInfoMap.forEach((k, v) -> {
             ConsumerTopicOffset consumerTopicOffset = consumerTopicOffsetMap.get(k);
             if (consumerTopicOffset != null) {
-                System.out.println(new Date(v.timestamp()));
                 consumerTopicOffset.setLogSize(v.offset());
                 consumerTopicOffset.setLag(consumerTopicOffset.getLogSize() - consumerTopicOffset.getOffset());
             }
