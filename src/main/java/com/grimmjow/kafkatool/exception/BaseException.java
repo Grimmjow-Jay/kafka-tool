@@ -36,7 +36,7 @@ public class BaseException extends RuntimeException {
         }
     }
 
-    public static void assertEmpty(CharSequence cs, String message) {
+    public static void assertBlank(CharSequence cs, String message) {
         int strLen;
         if (cs == null || (strLen = cs.length()) == 0) {
             throw new BaseException(message);

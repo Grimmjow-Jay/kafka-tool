@@ -15,6 +15,10 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_OUT;
+import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 
 /**
  * @author Grimm
@@ -32,13 +36,13 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public void addCluster(Cluster cluster) {
         BaseException.assertNull(cluster, "集群为空");
-        BaseException.assertEmpty(cluster.getClusterName(), "集群名为空");
+        BaseException.assertBlank(cluster.getClusterName(), "集群名为空");
         try (AdminClient kafkaAdminClient = ClusterPool.connect(cluster)) {
             KafkaFuture<String> clusterIdFuture = kafkaAdminClient.describeCluster().clusterId();
-            String clusterId = clusterIdFuture.get();
+            String clusterId = clusterIdFuture.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
             log.info("添加集群：" + clusterId);
-        } catch (InterruptedException | ExecutionException e) {
-            throw new BaseException("添加集群失败", e);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new BaseException("添加集群失败:" + e.getMessage(), e);
         }
 
         ClusterPool.addCluster(cluster);
@@ -55,9 +59,9 @@ public class ClusterServiceImpl implements ClusterService {
         KafkaFuture<Collection<Node>> nodesFuture = adminClient.describeCluster().nodes();
         Collection<Node> nodeCollection;
         try {
-            nodeCollection = nodesFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new BaseException("获取集群节点失败");
+            nodeCollection = nodesFuture.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new BaseException("获取集群节点失败:" + e.getMessage());
         }
         List<KafkaNode> kafkaNodeList = Lists.newArrayList();
         for (Node node : nodeCollection) {

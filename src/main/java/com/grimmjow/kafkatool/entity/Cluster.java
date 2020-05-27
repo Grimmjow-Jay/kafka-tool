@@ -2,6 +2,10 @@ package com.grimmjow.kafkatool.entity;
 
 import lombok.Data;
 
+/**
+ * @author Grimm
+ * @since 2020/5/26
+ */
 @Data
 public class Cluster {
 

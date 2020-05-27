@@ -33,8 +33,9 @@ public class ConsumerTest {
             } catch (Exception e) {
                 break;
             }
-            for (ConsumerRecord<String, String> record : records)
+            for (ConsumerRecord<String, String> record : records) {
                 System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+            }
         }
         consumer.close();
     }

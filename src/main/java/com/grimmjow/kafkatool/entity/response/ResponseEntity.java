@@ -3,8 +3,15 @@ package com.grimmjow.kafkatool.entity.response;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 
+/**
+ * 统一返回值
+ *
+ * @author Grimm
+ * @since 2020/5/26
+ */
 @Data
 public class ResponseEntity<T> {
+
     private boolean success;
     private String message;
     private int code;

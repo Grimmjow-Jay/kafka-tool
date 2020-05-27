@@ -1,6 +1,6 @@
 package com.grimmjow.kafkatool.config;
 
-import org.springframework.util.StringUtils;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Grimm
@@ -8,10 +8,10 @@ import org.springframework.util.StringUtils;
  */
 public class ConstantConfig {
 
-    public static final String DATA_PATH;
+    public static final String DATA_PATH = System.getProperty("data.dir", System.getProperty("java.io.tmpdir"));
 
-    static {
-        String dataDirEnv = System.getProperty("data.dir");
-        DATA_PATH = StringUtils.isEmpty(dataDirEnv) ? System.getProperty("java.io.tmpdir") : dataDirEnv;
-    }
+    public static final long DEFAULT_TIME_OUT = 10000L;
+
+    public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MILLISECONDS;
+
 }

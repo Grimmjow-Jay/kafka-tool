@@ -2,12 +2,18 @@ package com.grimmjow.kafkatool.controller;
 
 import com.grimmjow.kafkatool.entity.Cluster;
 import com.grimmjow.kafkatool.entity.KafkaNode;
+import com.grimmjow.kafkatool.entity.response.Empty;
 import com.grimmjow.kafkatool.entity.response.ResponseEntity;
 import com.grimmjow.kafkatool.service.ClusterService;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
+/**
+ * @author Grimm
+ * @since 2020/5/26
+ */
 @RestController
 @RequestMapping("cluster")
 public class ClusterRestController {
@@ -18,25 +24,25 @@ public class ClusterRestController {
         this.clusterService = clusterService;
     }
 
-    @RequestMapping("list")
+    @GetMapping("/clusters")
     public ResponseEntity<List<Cluster>> clusters() {
         return ResponseEntity.success(clusterService.clusters());
     }
 
     @PostMapping
-    public ResponseEntity<Boolean> addCluster(@RequestBody Cluster cluster) {
+    public ResponseEntity<Empty> addCluster(@RequestBody Cluster cluster) {
         clusterService.addCluster(cluster);
-        return ResponseEntity.success(true);
+        return ResponseEntity.success();
     }
 
-    @DeleteMapping
-    public ResponseEntity<Boolean> removeCluster(@RequestParam("clusterName") String clusterName) {
+    @DeleteMapping("/{clusterName}")
+    public ResponseEntity<Empty> removeCluster(@PathVariable String clusterName) {
         clusterService.removeCluster(clusterName);
-        return ResponseEntity.success(true);
+        return ResponseEntity.success();
     }
 
-    @GetMapping("/nodes")
-    public ResponseEntity<List<KafkaNode>> listNodes(@RequestParam("clusterName") String clusterName) {
+    @GetMapping("/nodes/{clusterName}")
+    public ResponseEntity<List<KafkaNode>> listNodes(@PathVariable String clusterName) {
         return ResponseEntity.success(clusterService.listNodes(clusterName));
     }
 }

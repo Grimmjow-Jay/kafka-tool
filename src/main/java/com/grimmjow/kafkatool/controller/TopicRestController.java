@@ -23,14 +23,14 @@ public class TopicRestController {
         this.topicService = topicService;
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<Set<String>> topics(@RequestParam("clusterName") String clusterName) {
+    @GetMapping("/topics/{clusterName}")
+    public ResponseEntity<Set<String>> topics(@PathVariable("clusterName") String clusterName) {
         return ResponseEntity.success(topicService.topics(clusterName));
     }
 
-    @GetMapping("/detail")
-    public ResponseEntity<KafkaTopic> detail(@RequestParam("clusterName") String clusterName,
-                                             @RequestParam("topic") String topic) {
+    @GetMapping("/{clusterName}/{topic}")
+    public ResponseEntity<KafkaTopic> detail(@PathVariable("clusterName") String clusterName,
+                                             @PathVariable("topic") String topic) {
         return ResponseEntity.success(topicService.detail(clusterName, topic));
     }
 

@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_OUT;
+import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 
 /**
  * @author Grimm
@@ -32,33 +36,33 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public Set<String> topics(String clusterName) {
-        BaseException.assertEmpty(clusterName, "集群名为空");
+        BaseException.assertBlank(clusterName, "集群名为空");
 
         AdminClient kafkaAdminClient = ClusterPool.getAdminClient(clusterName);
         ListTopicsResult listTopicsResult = kafkaAdminClient.listTopics(new ListTopicsOptions().listInternal(true));
         KafkaFuture<Set<String>> names = listTopicsResult.names();
         try {
-            return names.get();
-        } catch (InterruptedException | ExecutionException e) {
+            return names.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             log.error("获取集群Topic列表异常", e);
-            throw new BaseException("获取集群Topic列表异常");
+            throw new BaseException("获取集群Topic列表异常:" + e.getMessage());
         }
     }
 
     @Override
     public KafkaTopic detail(String clusterName, String topic) {
-        BaseException.assertEmpty(clusterName, "集群名为空");
-        BaseException.assertEmpty(topic, "Topic为空");
+        BaseException.assertBlank(clusterName, "集群名为空");
+        BaseException.assertBlank(topic, "Topic为空");
 
         AdminClient kafkaAdminClient = ClusterPool.getAdminClient(clusterName);
         DescribeTopicsResult describeTopicsResult = kafkaAdminClient.describeTopics(Lists.newArrayList(topic));
         KafkaFuture<TopicDescription> topicFutureMap = describeTopicsResult.values().get(topic);
         TopicDescription topicDescription;
         try {
-            topicDescription = topicFutureMap.get();
-        } catch (InterruptedException | ExecutionException e) {
+            topicDescription = topicFutureMap.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             log.error("获取集群Topic详情异常", e);
-            throw new BaseException("获取集群Topic详情异常");
+            throw new BaseException("获取集群Topic详情异常:" + e.getMessage());
         }
         List<KafkaTopicPartition> partitionList = Lists.newArrayList();
         Map<TopicPartition, OffsetSpec> topicPartitionOffsets = Maps.newHashMap();
@@ -76,10 +80,10 @@ public class TopicServiceImpl implements TopicService {
         ListOffsetsResult listOffsetsResult = kafkaAdminClient.listOffsets(topicPartitionOffsets);
         Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> topicPartitionOffsetsMap;
         try {
-            topicPartitionOffsetsMap = listOffsetsResult.all().get();
-        } catch (InterruptedException | ExecutionException e) {
+            topicPartitionOffsetsMap = listOffsetsResult.all().get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             log.error("获取集群Topic详情异常", e);
-            throw new BaseException("获取集群Topic详情异常");
+            throw new BaseException("获取集群Topic详情异常:" + e.getMessage());
         }
         topicPartitionOffsetsMap.forEach((k, v) -> partitionMap.get(k.partition()).setOffset(v.offset()));
 
@@ -94,8 +98,8 @@ public class TopicServiceImpl implements TopicService {
         int partition = request.getPartition();
         int replication = request.getReplication();
 
-        BaseException.assertEmpty(clusterName, "集群名为空");
-        BaseException.assertEmpty(topic, "Topic为空");
+        BaseException.assertBlank(clusterName, "集群名为空");
+        BaseException.assertBlank(topic, "Topic为空");
         BaseException.assertCondition(partition < 1, "分区数不合法");
         BaseException.assertCondition(replication < 1 || replication > Short.MAX_VALUE, "副本数不合法");
 
@@ -104,8 +108,8 @@ public class TopicServiceImpl implements TopicService {
         ArrayList<NewTopic> newTopics = Lists.newArrayList(new NewTopic(topic, partition, (short) replication));
         CreateTopicsResult createTopicsResult = kafkaAdminClient.createTopics(newTopics);
         try {
-            createTopicsResult.all().get();
-        } catch (InterruptedException | ExecutionException e) {
+            createTopicsResult.all().get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             log.error("创建Topic异常", e);
             throw new BaseException("创建Topic异常:" + e.getMessage());
         }

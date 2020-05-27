@@ -12,9 +12,13 @@ import org.apache.kafka.clients.admin.KafkaAdminClient;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_OUT;
+import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 
 /**
  * @author Grimm
@@ -40,7 +44,7 @@ public class ClusterPool {
     private ClusterPool() {
     }
 
-    public static synchronized List<Cluster> getClusterList() {
+    public static List<Cluster> getClusterList() {
         return Lists.newArrayList(clusterMap.values());
     }
 
@@ -53,14 +57,13 @@ public class ClusterPool {
 
     public static void removeCluster(String clusterName) {
         Cluster cluster = clusterMap.get(clusterName);
-        if (cluster != null) {
-            clusterMap.remove(clusterName);
-            saveCluster();
-            AdminClient client = pool.get(clusterName);
-            if (client != null) {
-                pool.remove(clusterName);
-                client.close();
-            }
+        BaseException.assertNull(cluster, "集群不存在");
+        clusterMap.remove(clusterName);
+        saveCluster();
+        AdminClient client = pool.get(clusterName);
+        if (client != null) {
+            pool.remove(clusterName);
+            client.close(Duration.ofMillis(DEFAULT_TIME_UNIT.toMillis(DEFAULT_TIME_OUT)));
         }
     }
 
