@@ -16,7 +16,10 @@ import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -33,7 +36,7 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public List<String> consumers(String clusterName) {
-        BaseException.assertNull(clusterName, "集群名为空");
+        BaseException.assertBlank(clusterName, "集群名为空");
 
         AdminClient adminClient = ClusterPool.getAdminClient(clusterName);
         KafkaFuture<Collection<ConsumerGroupListing>> consumerGroupListingFuture = adminClient.listConsumerGroups().all();
@@ -50,8 +53,8 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public List<ConsumerTopicOffset> offsets(String clusterName, String consumerName) {
-        BaseException.assertNull(clusterName, "集群名为空");
-        BaseException.assertNull(consumerName, "消费者为空");
+        BaseException.assertBlank(clusterName, "集群名为空");
+        BaseException.assertBlank(consumerName, "消费者为空");
 
         AdminClient adminClient = ClusterPool.getAdminClient(clusterName);
 
