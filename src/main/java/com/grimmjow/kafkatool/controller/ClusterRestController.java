@@ -1,10 +1,10 @@
-package com.grimmjow.kafkaTool.controller;
+package com.grimmjow.kafkatool.controller;
 
-import com.grimmjow.kafkaTool.entity.Cluster;
-import com.grimmjow.kafkaTool.entity.KafkaNode;
-import com.grimmjow.kafkaTool.entity.response.Empty;
-import com.grimmjow.kafkaTool.entity.response.ResponseEntity;
-import com.grimmjow.kafkaTool.service.ClusterService;
+import com.grimmjow.kafkatool.entity.Cluster;
+import com.grimmjow.kafkatool.entity.KafkaNode;
+import com.grimmjow.kafkatool.entity.response.Empty;
+import com.grimmjow.kafkatool.entity.response.ResponseEntity;
+import com.grimmjow.kafkatool.service.ClusterService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

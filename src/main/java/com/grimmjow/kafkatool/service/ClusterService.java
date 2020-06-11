@@ -1,7 +1,7 @@
-package com.grimmjow.kafkaTool.service;
+package com.grimmjow.kafkatool.service;
 
-import com.grimmjow.kafkaTool.entity.Cluster;
-import com.grimmjow.kafkaTool.entity.KafkaNode;
+import com.grimmjow.kafkatool.entity.Cluster;
+import com.grimmjow.kafkatool.entity.KafkaNode;
 
 import java.util.List;
 

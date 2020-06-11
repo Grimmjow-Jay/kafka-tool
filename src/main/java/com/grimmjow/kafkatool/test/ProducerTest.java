@@ -1,4 +1,4 @@
-package com.grimmjow.kafkaTool.test;
+package com.grimmjow.kafkatool.test;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.KafkaProducer;

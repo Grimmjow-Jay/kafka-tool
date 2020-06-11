@@ -1,4 +1,4 @@
-package com.grimmjow.kafkaTool.exception;
+package com.grimmjow.kafkatool.exception;
 
 import java.util.Collection;
 import java.util.Map;

@@ -1,11 +1,11 @@
-package com.grimmjow.kafkaTool.service.impl;
+package com.grimmjow.kafkatool.service.impl;
 
 import com.google.common.collect.Lists;
-import com.grimmjow.kafkaTool.entity.Cluster;
-import com.grimmjow.kafkaTool.entity.ClusterPool;
-import com.grimmjow.kafkaTool.entity.KafkaNode;
-import com.grimmjow.kafkaTool.exception.BaseException;
-import com.grimmjow.kafkaTool.service.ClusterService;
+import com.grimmjow.kafkatool.entity.Cluster;
+import com.grimmjow.kafkatool.entity.ClusterPool;
+import com.grimmjow.kafkatool.entity.KafkaNode;
+import com.grimmjow.kafkatool.exception.BaseException;
+import com.grimmjow.kafkatool.service.ClusterService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.common.KafkaFuture;
@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import static com.grimmjow.kafkaTool.config.ConstantConfig.DEFAULT_TIME_OUT;
-import static com.grimmjow.kafkaTool.config.ConstantConfig.DEFAULT_TIME_UNIT;
+import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_OUT;
+import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 
 /**
  * @author Grimm

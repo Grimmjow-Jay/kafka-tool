@@ -1,4 +1,4 @@
-package com.grimmjow.kafkaTool.entity.response;
+package com.grimmjow.kafkatool.entity.response;
 
 /**
  * @author Grimm

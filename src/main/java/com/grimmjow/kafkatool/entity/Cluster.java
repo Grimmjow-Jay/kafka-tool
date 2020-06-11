@@ -1,4 +1,4 @@
-package com.grimmjow.kafkaTool.entity;
+package com.grimmjow.kafkatool.entity;
 
 import lombok.Data;
 

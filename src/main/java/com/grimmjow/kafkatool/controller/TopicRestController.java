@@ -1,10 +1,10 @@
-package com.grimmjow.kafkaTool.controller;
+package com.grimmjow.kafkatool.controller;
 
-import com.grimmjow.kafkaTool.entity.KafkaTopic;
-import com.grimmjow.kafkaTool.entity.request.CreateTopicRequest;
-import com.grimmjow.kafkaTool.entity.response.Empty;
-import com.grimmjow.kafkaTool.entity.response.ResponseEntity;
-import com.grimmjow.kafkaTool.service.TopicService;
+import com.grimmjow.kafkatool.entity.KafkaTopic;
+import com.grimmjow.kafkatool.entity.request.CreateTopicRequest;
+import com.grimmjow.kafkatool.entity.response.Empty;
+import com.grimmjow.kafkatool.entity.response.ResponseEntity;
+import com.grimmjow.kafkatool.service.TopicService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;

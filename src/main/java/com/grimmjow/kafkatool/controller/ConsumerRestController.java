@@ -1,8 +1,8 @@
-package com.grimmjow.kafkaTool.controller;
+package com.grimmjow.kafkatool.controller;
 
-import com.grimmjow.kafkaTool.entity.ConsumerTopicOffset;
-import com.grimmjow.kafkaTool.entity.response.ResponseEntity;
-import com.grimmjow.kafkaTool.service.ConsumerService;
+import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
+import com.grimmjow.kafkatool.entity.response.ResponseEntity;
+import com.grimmjow.kafkatool.service.ConsumerService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
