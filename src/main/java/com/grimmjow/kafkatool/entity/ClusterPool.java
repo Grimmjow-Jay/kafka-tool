@@ -26,22 +26,23 @@ import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
  */
 public class ClusterPool {
 
-    private static final String CLUSTER_JSON = "cluster.json";
-    private static final File CLUSTER_JSON_FILE;
-    private static Map<String, Cluster> clusterMap;
-    private static Map<String, AdminClient> pool;
+    private static final String CLUSTER_FILE_NAME = "cluster.json";
+    private static Map<String, Cluster> clusterMap = Maps.newLinkedHashMap();
+    private static Map<String, AdminClient> pool = Maps.newConcurrentMap();
 
     static {
-        CLUSTER_JSON_FILE = new File(ConstantConfig.DATA_PATH, CLUSTER_JSON);
-        clusterMap = Maps.newLinkedHashMap();
-        if (CLUSTER_JSON_FILE.exists() && CLUSTER_JSON_FILE.isFile()) {
-            List<Cluster> clusterList = JsonUtil.loadToList(CLUSTER_JSON_FILE, Cluster.class);
-            clusterList.forEach(e -> clusterMap.put(e.getClusterName(), e));
-        }
-        pool = Maps.newConcurrentMap();
+        loadCluster();
     }
 
     private ClusterPool() {
+    }
+
+    private static void loadCluster() {
+        File clusterFile = new File(ConstantConfig.DATA_PATH, CLUSTER_FILE_NAME);
+        if (clusterFile.exists() && clusterFile.isFile()) {
+            List<Cluster> clusterList = JsonUtil.loadToList(clusterFile, Cluster.class);
+            clusterList.forEach(e -> clusterMap.put(e.getClusterName(), e));
+        }
     }
 
     public static List<Cluster> getClusterList() {
@@ -68,7 +69,7 @@ public class ClusterPool {
     }
 
     private static void saveCluster() {
-        try (FileWriter writer = new FileWriter(CLUSTER_JSON_FILE, false)) {
+        try (FileWriter writer = new FileWriter(new File(ConstantConfig.DATA_PATH, CLUSTER_FILE_NAME), false)) {
             writer.write(JsonUtil.objToJson(clusterMap.values()));
         } catch (IOException e) {
             throw new BaseException(e);
