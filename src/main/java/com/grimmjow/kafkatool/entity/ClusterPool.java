@@ -88,4 +88,14 @@ public class ClusterPool {
         return KafkaAdminClient.create(props);
     }
 
+    public static void reconnect(String clusterName) {
+        Cluster cluster = clusterMap.get(clusterName);
+        BaseException.assertNull(cluster, "集群不存在");
+        AdminClient client = pool.get(clusterName);
+        if (client != null) {
+            client.close(Duration.ofMillis(DEFAULT_TIME_UNIT.toMillis(DEFAULT_TIME_OUT)));
+        }
+        pool.put(clusterName, connect(cluster));
+    }
+
 }

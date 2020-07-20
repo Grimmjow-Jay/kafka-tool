@@ -72,4 +72,9 @@ public class ClusterServiceImpl implements ClusterService {
         return kafkaNodeList;
     }
 
+    @Override
+    public void reconnect(String clusterName) {
+        ClusterPool.reconnect(clusterName);
+    }
+
 }

@@ -44,4 +44,10 @@ public class ClusterRestController {
     public ResponseEntity<List<KafkaNode>> listNodes(@PathVariable String clusterName) {
         return ResponseEntity.success(clusterService.listNodes(clusterName));
     }
+
+    @PutMapping("reconnect/{clusterName}")
+    public ResponseEntity<Empty> reconnect(@PathVariable String clusterName) {
+        clusterService.reconnect(clusterName);
+        return ResponseEntity.success();
+    }
 }

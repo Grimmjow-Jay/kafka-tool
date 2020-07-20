@@ -34,7 +34,7 @@
             type: 'GET',
             dataType: 'json',
             success: function (result) {
-                updateClusterList(result.data)
+                showClusterSelect(result.data)
             },
             beforeSend: function () {
                 layerShade = layer.load(1, {
@@ -47,7 +47,7 @@
         });
     }
 
-    function updateClusterList(clusterList) {
+    function showClusterSelect(clusterList) {
         let $clusterList = $("#cluster-list");
         if (!clusterList) {
             $clusterList.html('');
@@ -98,6 +98,7 @@
         let $brokersTable = $("#brokers-table");
         if (!brokers) {
             $brokersTable.html('');
+            return;
         }
         let brokersTableHtml = '';
         for (let index in brokers) {
