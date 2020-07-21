@@ -12,86 +12,61 @@
     const urls = {
         getCluster: '/cluster/clusters',
         getBrokers: '/cluster/nodes/{clusterName}',
+        getTopics: '/topic/topics/{clusterName}',
+        getTopicDetail: '/topic/detail/{clusterName}/{topic}',
         getConsumers: '/consumer/consumers/{clusterName}',
         getConsumerOffsets: '/consumer/offsets/{clusterName}/{consumerName}'
     };
 
-    const consumersTableCol = [[
-        {field: 'topic', title: 'topic'},
-        {field: 'consumer', title: 'consumer'},
-        {field: 'partition', title: 'partition'},
-        {field: 'offset', title: 'offset'},
-        {field: 'logSize', title: 'logSize'},
-        {field: 'lag', title: 'lag'},
-        {field: 'lastCommit', title: 'last commit'}
-    ]];
+    const tableCol = {
+        consumers: [[
+            {field: 'topic', title: 'topic'},
+            {field: 'consumer', title: 'consumer'},
+            {field: 'partition', title: 'partition'},
+            {field: 'offset', title: 'offset'},
+            {field: 'logSize', title: 'logSize'},
+            {field: 'lag', title: 'lag'},
+            {field: 'lastCommit', title: 'last commit'}
+        ]],
+        topic: [[
+            {field: 'topic', title: 'topic'},
+            {field: 'partition', title: 'partition'},
+            {field: 'offset', title: 'offset'},
+            {field: 'replicas', title: 'replicas'},
+            {field: 'leader', title: 'leader'}
+        ]]
+    };
 
-    getCluster();
+    updateCluster();
 
-    function getCluster() {
-        $.ajax({
-            url: urls.getCluster,
-            type: 'GET',
-            dataType: 'json',
-            success: function (result) {
-                showClusterSelect(result.data)
-            },
-            beforeSend: function () {
-                layerShade = layer.load(1, {
-                    shade: [0.5, '#393D49']
-                });
-            },
-            complete: function () {
-                layer.close(layerShade);
-            }
-        });
+    function updateCluster() {
+        ajaxGet(urls.getCluster, showClusterSelect);
     }
 
     function showClusterSelect(clusterList) {
-        let $clusterList = $("#cluster-list");
-        if (!clusterList) {
-            $clusterList.html('');
-            element.render();
-            return;
+
+        let clusterSelectHtml = '';
+        clusterSelectHtml += '<select lay-filter="cluster" name="cluster">';
+        clusterSelectHtml += '<option value=""></option>';
+        for (let i = 0; i < clusterList.length; i++) {
+            let clusterName = clusterList[i]["clusterName"];
+            clusterSelectHtml += '<option value="' + clusterName + '">' + clusterName + '</option>';
         }
 
-        let clusterListHtml = '';
-        for (const index in clusterList) {
-            if (!clusterList.hasOwnProperty(index)) {
-                continue;
-            }
-            let cluster = clusterList[index];
-            clusterListHtml += '<dd><a href="javascript:;">' + cluster["clusterName"] + '</a></dd>';
-        }
+        clusterSelectHtml += '</select>';
+        $("#cluster-select").html(clusterSelectHtml);
 
-        $clusterList.html(clusterListHtml);
-        element.render();
-
-        element.on('nav(cluster-nav)', function (elem) {
-            currentCluster = elem.text();
-            updateBrokers();
+        form.on('select(cluster)', function (elem) {
+            currentCluster = elem.value;
             updateTopics();
+            updateBrokers();
             updateConsumers();
         });
+        form.render();
     }
 
     function updateBrokers() {
-        $.ajax({
-            url: urls.getBrokers.replace(/{clusterName}/, currentCluster),
-            type: 'GET',
-            dataType: 'json',
-            success: function (result) {
-                showBrokers(result.data);
-            },
-            beforeSend: function () {
-                layerShade = layer.load(1, {
-                    shade: [0.5, '#393D49']
-                });
-            },
-            complete: function () {
-                layer.close(layerShade);
-            }
-        });
+        ajaxGet(urls.getBrokers.replace(/{clusterName}/, currentCluster), showBrokers);
     }
 
     function showBrokers(brokers) {
@@ -101,11 +76,8 @@
             return;
         }
         let brokersTableHtml = '';
-        for (let index in brokers) {
-            if (!brokers.hasOwnProperty(index)) {
-                continue;
-            }
-            let broker = brokers[index];
+        for (let i = 0; i < brokers.length; i++) {
+            let broker = brokers[i];
             brokersTableHtml += '<tr><td>' + broker["id"] + '</td>';
             brokersTableHtml += '<td>' + broker["host"] + '</td>';
             brokersTableHtml += '<td>' + broker["port"] + '</td></tr>';
@@ -115,31 +87,134 @@
     }
 
     function updateTopics() {
-        $.ajax({
-            url: urls.getBrokers.replace(/{clusterName}/, currentCluster),
-            type: 'GET',
-            dataType: 'json',
-            success: function (result) {
-                showBrokers(result.data);
-            },
-            beforeSend: function () {
-                layerShade = layer.load(1, {
-                    shade: [0.5, '#393D49']
-                });
-            },
-            complete: function () {
-                layer.close(layerShade);
-            }
+        ajaxGet(urls.getTopics.replace(/{clusterName}/, currentCluster), showTopics);
+    }
+
+    function showTopics(topicList) {
+        let $topicList = $("#topic-list");
+        if (!topicList) {
+            $topicList.html('');
+            element.render();
+            return;
+        }
+
+        let topicListHtml = '';
+        for (let i = 0; i < topicList.length; i++) {
+            topicListHtml += '<dd><a href="javascript:;">' + topicList[i] + '</a></dd>';
+        }
+
+        $topicList.html(topicListHtml);
+        element.render();
+
+        element.on('nav(topic-nav)', function (elem) {
+            const topic = elem.text();
+            updateTopicDetail(topic);
         });
+    }
+
+    function updateTopicDetail(topic) {
+        let updateTopicDetailUrl = urls.getTopicDetail
+            .replace(/{clusterName}/, currentCluster)
+            .replace(/{topic}/, topic);
+        ajaxGet(updateTopicDetailUrl, showTopicDetail);
+    }
+
+    function showTopicDetail(topicDetail) {
+        let $topicDetailTable = $("#topic-detail-table");
+        if (!topicDetail) {
+            $topicDetailTable.html('');
+            return;
+        }
+        let brokersTableHtml = '';
+        let topicName = topicDetail["name"];
+        let partitions = topicDetail["partitions"];
+        for (let i = 0; i < partitions.length; i++) {
+            const partition = partitions[i];
+            brokersTableHtml += '<tr><td>' + topicName + '</td>';
+            brokersTableHtml += '<td>' + partition["partition"] + '</td>';
+            brokersTableHtml += '<td>' + partition["offset"] + '</td>';
+            brokersTableHtml += '<td>' + concatPartition(partition["replicas"]) + '</td>';
+            const leader = partition["leader"];
+            brokersTableHtml += '<td>' + leader["host"] + ':' + leader["port"] + '</td></tr>';
+        }
+        $topicDetailTable.html(brokersTableHtml);
+        element.render();
+    }
+
+    function concatPartition(nodeList) {
+        let partitionHtml = '';
+        let length = nodeList.length;
+        for (let i = 0; i < length; i++) {
+            let node = nodeList[i];
+            partitionHtml += node["host"] + ':' + node["port"];
+            if (i < length) {
+                partitionHtml += "<br/>"
+            }
+        }
+        return partitionHtml;
     }
 
     function updateConsumers() {
+        const getConsumersUrl = urls.getConsumers.replace(/{clusterName}/, currentCluster);
+        ajaxGet(getConsumersUrl, showConsumers);
+    }
+
+    function showConsumers(consumerList) {
+        let $consumerList = $("#consumer-list");
+        if (!consumerList) {
+            $consumerList.html('');
+            element.render();
+            return;
+        }
+
+        let consumerListHtml = '';
+        for (let i = 0; i < consumerList.length; i++) {
+            consumerListHtml += '<dd><a href="javascript:;">' + consumerList[i] + '</a></dd>';
+        }
+
+        $consumerList.html(consumerListHtml);
+        element.render();
+
+        element.on('nav(consumer-nav)', function (elem) {
+            const consumer = elem.text();
+            updateConsumerOffsets(consumer);
+        });
+    }
+
+    function updateConsumerOffsets(consumer) {
+        let getConsumerOffsetsUrl = urls.getConsumerOffsets
+            .replace(/{clusterName}/, currentCluster)
+            .replace(/{consumerName}/, consumer);
+        ajaxGet(getConsumerOffsetsUrl, showConsumerOffsets);
+    }
+
+    function showConsumerOffsets(consumerOffsetList) {
+        let $consumerTopicTable = $("#consumer-topic-table");
+        if (!consumerOffsetList) {
+            $consumerTopicTable.html('');
+            return;
+        }
+        let consumerOffsetsTableHtml = '';
+        for (let i = 0; i < consumerOffsetList.length; i++) {
+            const consumerOffset = consumerOffsetList[i];
+            consumerOffsetsTableHtml += '<tr><td>' + consumerOffset["consumer"] + '</td>';
+            consumerOffsetsTableHtml += '<td>' + consumerOffset["topic"] + '</td>';
+            consumerOffsetsTableHtml += '<td>' + consumerOffset["partition"] + '</td>';
+            consumerOffsetsTableHtml += '<td>' + consumerOffset["offset"] + '</td>';
+            consumerOffsetsTableHtml += '<td>' + consumerOffset["logSize"] + '</td>';
+            consumerOffsetsTableHtml += '<td>' + consumerOffset["lag"] + '</td></tr>';
+        }
+        $consumerTopicTable.html(consumerOffsetsTableHtml);
+        element.render();
+    }
+
+    function ajaxGet(url, callback) {
         $.ajax({
-            url: urls.getBrokers.replace(/{clusterName}/, currentCluster),
+            url: url,
             type: 'GET',
             dataType: 'json',
             success: function (result) {
-                showBrokers(result.data);
+                callback(result.data);
             },
             beforeSend: function () {
                 layerShade = layer.load(1, {
@@ -150,9 +225,5 @@
                 layer.close(layerShade);
             }
         });
-    }
-
-    function showConsumers() {
-
     }
 }();

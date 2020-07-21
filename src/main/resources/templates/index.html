@@ -9,70 +9,88 @@
 <div class="layui-form">
     <label class="layui-form-label">选择集群</label>
     <div class="layui-input-inline">
-        <label>
-            <select lay-filter="cluster" name="cluster">
-                <option value=""></option>
-                <option value="0">写作</option>
-                <option value="1">阅读</option>
-                <option value="2">游戏</option>
-                <option value="3">音乐</option>
-                <option value="4">旅行</option>
-            </select>
-        </label>
+        <label id="cluster-select"></label>
     </div>
 </div>
 <br/>
-<div class="layui-col-sm2">
-    <div>
-        <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="cluster-nav">
-            <li class="layui-nav-item layui-nav-itemed">
-                <dl style="text-align: center;">Clusters</dl>
-                <dl class="layui-nav-child" id="cluster-list"></dl>
-            </li>
-        </ul>
-    </div>
-</div>
-<div class="layui-col-sm9">
-    <div class="layui-tab">
-        <ul class="layui-tab-title">
-            <li class="layui-this">Topics</li>
-            <li>Consumers</li>
-            <li>Brokers</li>
-        </ul>
-        <div class="layui-tab-content">
+<div class="layui-tab">
+    <ul class="layui-tab-title">
+        <li class="layui-this">Topics</li>
+        <li>Consumers</li>
+        <li>Brokers</li>
+    </ul>
+    <div class="layui-tab-content">
 
-            <!-- topic -->
-            <div class="layui-tab-item layui-show">
+        <!-- topic -->
+        <div class="layui-tab-item layui-show">
+
+            <div class="layui-col-sm2">
+                <div>
+                    <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="topic-nav">
+                        <li class="layui-nav-item layui-nav-itemed">
+                            <dl style="text-align: center">Topics</dl>
+                            <dl class="layui-nav-child" id="topic-list"></dl>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="layui-col-sm8">
                 <table class="layui-table" lay-even="" lay-skin="row">
                     <thead>
                     <tr>
-                        <th>id</th>
-                        <th>host</th>
-                        <th>port</th>
+                        <th>topic</th>
+                        <th>partition</th>
+                        <th>offset</th>
+                        <th>replicas</th>
+                        <th>leader</th>
                     </tr>
                     </thead>
-                    <tbody id="topics-table"></tbody>
+                    <tbody id="topic-detail-table"></tbody>
                 </table>
             </div>
+        </div>
 
-            <!-- consumer -->
-            <div class="layui-tab-item">
-                <table id="consumers-table" lay-filter="consumers-table"></table>
+        <!-- consumer -->
+        <div class="layui-tab-item">
+            <div class="layui-col-sm2">
+                <div>
+                    <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="consumer-nav">
+                        <li class="layui-nav-item layui-nav-itemed">
+                            <dl style="text-align: center;">Consumers</dl>
+                            <dl class="layui-nav-child" id="consumer-list"></dl>
+                        </li>
+                    </ul>
+                </div>
             </div>
-
-            <!-- broker -->
-            <div class="layui-tab-item">
+            <div class="layui-col-sm8">
                 <table class="layui-table" lay-even="" lay-skin="row">
                     <thead>
                     <tr>
-                        <th>id</th>
-                        <th>host</th>
-                        <th>port</th>
+                        <th>consumer</th>
+                        <th>topic</th>
+                        <th>partition</th>
+                        <th>offset</th>
+                        <th>logSize</th>
+                        <th>lag</th>
                     </tr>
                     </thead>
-                    <tbody id="brokers-table"></tbody>
+                    <tbody id="consumer-topic-table"></tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- broker -->
+        <div class="layui-tab-item">
+            <table class="layui-table" lay-even="" lay-skin="row">
+                <thead>
+                <tr>
+                    <th>id</th>
+                    <th>host</th>
+                    <th>port</th>
+                </tr>
+                </thead>
+                <tbody id="brokers-table"></tbody>
+            </table>
         </div>
     </div>
 </div>
