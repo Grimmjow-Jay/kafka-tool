@@ -15,7 +15,8 @@
         getTopics: '/topic/topics/{clusterName}',
         getTopicDetail: '/topic/detail/{clusterName}/{topic}',
         getConsumers: '/consumer/consumers/{clusterName}',
-        getConsumerOffsets: '/consumer/offsets/{clusterName}/{consumerName}'
+        getConsumerOffsets: '/consumer/offsets/{clusterName}/{consumerName}',
+        addCluster: '/cluster'
     };
 
     const tableCol = {
@@ -39,8 +40,35 @@
 
     updateCluster();
 
+    initAddClusterBtn();
+
     function updateCluster() {
         ajaxGet(urls.getCluster, showClusterSelect);
+    }
+
+    function initAddClusterBtn() {
+        $('#add-cluster-btn').on('click', function () {
+            layer.open({
+                type: 1,
+                title: "添加集群",
+                area: ["800px", "300px"],
+                content: $('#add-cluster-div').html(),
+                success: addCluster
+            });
+        });
+    }
+
+    function addCluster(dom, index) {
+        form.on('submit(addClusterFilter)', function (parameters) {
+            const data = parameters.field;
+            const url = urls.addCluster;
+            ajaxPost(url, JSON.stringify(data), function () {
+                layer.msg('添加成功');
+                updateCluster();
+                layer.close(index);
+            });
+            return false;
+        });
     }
 
     function showClusterSelect(clusterList) {
@@ -57,10 +85,12 @@
         $("#cluster-select").html(clusterSelectHtml);
 
         form.on('select(cluster)', function (elem) {
-            currentCluster = elem.value;
-            updateTopics();
-            updateBrokers();
-            updateConsumers();
+            if (elem && elem.value) {
+                currentCluster = elem.value;
+                updateTopics();
+                updateBrokers();
+                updateConsumers();
+            }
         });
         form.render();
     }
@@ -214,7 +244,7 @@
             type: 'GET',
             dataType: 'json',
             success: function (result) {
-                callback(result.data);
+                ajaxCallback(result, callback)
             },
             beforeSend: function () {
                 layerShade = layer.load(1, {
@@ -224,6 +254,48 @@
             complete: function () {
                 layer.close(layerShade);
             }
+        });
+    }
+
+    function ajaxPost(url, data, callback) {
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            contentType: 'application/json;charset=UTF-8',
+            success: function (result) {
+                ajaxCallback(result, callback)
+            },
+            beforeSend: function () {
+                layerShade = layer.load(1, {
+                    shade: [0.5, '#393D49']
+                });
+            },
+            complete: function () {
+                layer.close(layerShade);
+            }
+        });
+    }
+
+    function ajaxCallback(result, callback) {
+        if (!result) {
+            showErrorInfo('调用失败');
+            return
+        }
+        if (result.success) {
+            callback(result.data);
+        } else {
+            console.log(result.message);
+            showErrorInfo(result.message);
+        }
+    }
+
+    function showErrorInfo(errorMsg) {
+        layer.msg(errorMsg, {
+            offset: 't',
+            anim: 5,
+            time: 5000
         });
     }
 }();

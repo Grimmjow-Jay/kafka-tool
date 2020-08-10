@@ -11,6 +11,9 @@
     <div class="layui-input-inline">
         <label id="cluster-select"></label>
     </div>
+    <div style="float: right">
+        <button class="layui-btn" id="add-cluster-btn" type="button">添加集群</button>
+    </div>
 </div>
 <br/>
 <div class="layui-tab">
@@ -93,6 +96,32 @@
             </table>
         </div>
     </div>
+</div>
+<div id="add-cluster-div" style="display: none">
+    <form class="layui-form" style="padding-top: 5%">
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width: 15%">集群名</label>
+            <div class="layui-input-block" style="margin-left: 20%;margin-right: 15%">
+                <label>
+                    <input autocomplete="off" class="layui-input" name="clusterName" placeholder="" type="text">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width: 15%">Bootstrap Servers</label>
+            <div class="layui-input-block" style="margin-left: 20%;margin-right: 15%">
+                <label>
+                    <input autocomplete="off" class="layui-input" name="bootstrapServers" placeholder="" type="text">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block" style="float: right; margin-right: 15%; margin-top: 5%;">
+                <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+                <button class="layui-btn layui-btn-normal" lay-filter="addClusterFilter" lay-submit>确 定</button>
+            </div>
+        </div>
+    </form>
 </div>
 <script src="/layui/layui.all.js"></script>
 <script src="/index.js"></script>
