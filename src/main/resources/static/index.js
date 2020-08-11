@@ -130,7 +130,7 @@
 
         let topicListHtml = '';
         for (let i = 0; i < topicList.length; i++) {
-            topicListHtml += '<dd><a href="javascript:;">' + topicList[i] + '</a></dd>';
+            topicListHtml += '<dd><a href="javascript:;" title="' + topicList[i] + '">' + topicList[i] + '</a></dd>';
         }
 
         $topicList.html(topicListHtml);
