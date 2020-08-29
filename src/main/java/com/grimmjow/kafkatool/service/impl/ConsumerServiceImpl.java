@@ -2,7 +2,7 @@ package com.grimmjow.kafkatool.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.grimmjow.kafkatool.entity.ClusterPool;
+import com.grimmjow.kafkatool.component.ClusterClientPool;
 import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.service.ConsumerService;
@@ -34,11 +34,17 @@ import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 @Slf4j
 public class ConsumerServiceImpl implements ConsumerService {
 
+    private final ClusterClientPool clusterClientPool;
+
+    public ConsumerServiceImpl(ClusterClientPool clusterClientPool) {
+        this.clusterClientPool = clusterClientPool;
+    }
+
     @Override
     public List<String> consumers(String clusterName) {
         BaseException.assertBlank(clusterName, "集群名为空");
 
-        AdminClient adminClient = ClusterPool.getAdminClient(clusterName);
+        AdminClient adminClient = clusterClientPool.getClient(clusterName);
         KafkaFuture<Collection<ConsumerGroupListing>> consumerGroupListingFuture = adminClient.listConsumerGroups().all();
         try {
             Collection<ConsumerGroupListing> consumerGroupListings = consumerGroupListingFuture.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
@@ -56,7 +62,7 @@ public class ConsumerServiceImpl implements ConsumerService {
         BaseException.assertBlank(clusterName, "集群名为空");
         BaseException.assertBlank(consumerName, "消费者为空");
 
-        AdminClient adminClient = ClusterPool.getAdminClient(clusterName);
+        AdminClient adminClient = clusterClientPool.getClient(clusterName);
 
         KafkaFuture<Map<TopicPartition, OffsetAndMetadata>> mapKafkaFuture = adminClient
                 .listConsumerGroupOffsets(consumerName).partitionsToOffsetAndMetadata();

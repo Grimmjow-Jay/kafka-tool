@@ -2,7 +2,7 @@ package com.grimmjow.kafkatool.service.impl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.grimmjow.kafkatool.entity.ClusterPool;
+import com.grimmjow.kafkatool.component.ClusterClientPool;
 import com.grimmjow.kafkatool.entity.KafkaNode;
 import com.grimmjow.kafkatool.entity.KafkaTopic;
 import com.grimmjow.kafkatool.entity.KafkaTopicPartition;
@@ -34,11 +34,17 @@ import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 @Slf4j
 public class TopicServiceImpl implements TopicService {
 
+    private final ClusterClientPool clusterClientPool;
+
+    public TopicServiceImpl(ClusterClientPool clusterClientPool) {
+        this.clusterClientPool = clusterClientPool;
+    }
+
     @Override
     public Set<String> topics(String clusterName) {
         BaseException.assertBlank(clusterName, "集群名为空");
 
-        AdminClient kafkaAdminClient = ClusterPool.getAdminClient(clusterName);
+        AdminClient kafkaAdminClient = clusterClientPool.getClient(clusterName);
         ListTopicsResult listTopicsResult = kafkaAdminClient.listTopics(new ListTopicsOptions().listInternal(true));
         KafkaFuture<Set<String>> names = listTopicsResult.names();
         try {
@@ -54,7 +60,7 @@ public class TopicServiceImpl implements TopicService {
         BaseException.assertBlank(clusterName, "集群名为空");
         BaseException.assertBlank(topic, "Topic为空");
 
-        AdminClient adminClient = ClusterPool.getAdminClient(clusterName);
+        AdminClient adminClient = clusterClientPool.getClient(clusterName);
         DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(Lists.newArrayList(topic));
         KafkaFuture<TopicDescription> topicFutureMap = describeTopicsResult.values().get(topic);
         TopicDescription topicDescription;
@@ -103,7 +109,7 @@ public class TopicServiceImpl implements TopicService {
         BaseException.assertCondition(partition < 1, "分区数不合法");
         BaseException.assertCondition(replication < 1 || replication > Short.MAX_VALUE, "副本数不合法");
 
-        AdminClient kafkaAdminClient = ClusterPool.getAdminClient(clusterName);
+        AdminClient kafkaAdminClient = clusterClientPool.getClient(clusterName);
 
         ArrayList<NewTopic> newTopics = Lists.newArrayList(new NewTopic(topic, partition, (short) replication));
         CreateTopicsResult createTopicsResult = kafkaAdminClient.createTopics(newTopics);

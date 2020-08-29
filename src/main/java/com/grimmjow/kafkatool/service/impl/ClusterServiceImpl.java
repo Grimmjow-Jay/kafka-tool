@@ -1,8 +1,9 @@
 package com.grimmjow.kafkatool.service.impl;
 
 import com.google.common.collect.Lists;
+import com.grimmjow.kafkatool.component.ClusterClientPool;
+import com.grimmjow.kafkatool.dao.ClusterDao;
 import com.grimmjow.kafkatool.entity.Cluster;
-import com.grimmjow.kafkatool.entity.ClusterPool;
 import com.grimmjow.kafkatool.entity.KafkaNode;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.service.ClusterService;
@@ -28,35 +29,38 @@ import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 @Slf4j
 public class ClusterServiceImpl implements ClusterService {
 
+    private final ClusterClientPool clusterClientPool;
+
+    private final ClusterDao clusterDao;
+
+    public ClusterServiceImpl(ClusterClientPool clusterClientPool, ClusterDao clusterDao) {
+        this.clusterClientPool = clusterClientPool;
+        this.clusterDao = clusterDao;
+    }
+
+
     @Override
     public List<Cluster> clusters() {
-        return ClusterPool.getClusterList();
+        return clusterDao.getClusterList();
     }
 
     @Override
     public void addCluster(Cluster cluster) {
         BaseException.assertNull(cluster, "集群为空");
         BaseException.assertBlank(cluster.getClusterName(), "集群名为空");
-        try (AdminClient kafkaAdminClient = ClusterPool.connect(cluster)) {
-            KafkaFuture<String> clusterIdFuture = kafkaAdminClient.describeCluster().clusterId();
-            String clusterId = clusterIdFuture.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
-            log.info("添加集群：" + clusterId);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            log.info("添加集群失败", e);
-            throw new BaseException("添加集群失败:" + e.getMessage(), e);
-        }
 
-        ClusterPool.addCluster(cluster);
+        clusterDao.saveCluster(cluster);
     }
 
     @Override
     public void removeCluster(String clusterName) {
-        ClusterPool.removeCluster(clusterName);
+        clusterClientPool.disconnectIfPresent(clusterName);
+        clusterDao.removeCluster(clusterName);
     }
 
     @Override
     public List<KafkaNode> listNodes(String clusterName) {
-        AdminClient adminClient = ClusterPool.getAdminClient(clusterName);
+        AdminClient adminClient = clusterClientPool.getClient(clusterName);
         KafkaFuture<Collection<Node>> nodesFuture = adminClient.describeCluster().nodes();
         Collection<Node> nodeCollection;
         try {
@@ -74,7 +78,7 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public void reconnect(String clusterName) {
-        ClusterPool.reconnect(clusterName);
+        clusterClientPool.reconnect(clusterName);
     }
 
 }
