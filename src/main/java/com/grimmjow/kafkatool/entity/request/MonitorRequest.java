@@ -26,4 +26,9 @@ public class MonitorRequest {
      */
     private String topic;
 
+    /**
+     * 监控时间间隔（毫秒）
+     */
+    private Long interval;
+
 }

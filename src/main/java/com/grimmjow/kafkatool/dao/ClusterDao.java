@@ -26,6 +26,8 @@ public interface ClusterDao {
 
     /**
      * 删除集群
+     *
+     * @param clusterName 集群名
      */
     void removeCluster(String clusterName);
 
