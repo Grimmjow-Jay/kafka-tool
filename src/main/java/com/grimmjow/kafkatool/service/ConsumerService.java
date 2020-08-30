@@ -1,6 +1,6 @@
 package com.grimmjow.kafkatool.service;
 
-import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
+import com.grimmjow.kafkatool.domain.ConsumerTopicOffset;
 
 import java.util.List;
 

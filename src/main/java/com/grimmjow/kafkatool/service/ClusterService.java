@@ -1,7 +1,8 @@
 package com.grimmjow.kafkatool.service;
 
-import com.grimmjow.kafkatool.entity.Cluster;
-import com.grimmjow.kafkatool.entity.KafkaNode;
+import com.grimmjow.kafkatool.domain.Cluster;
+import com.grimmjow.kafkatool.domain.KafkaNode;
+import com.grimmjow.kafkatool.vo.ClusterVo;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public interface ClusterService {
      *
      * @return 集群列表
      */
-    List<Cluster> clusters();
+    List<ClusterVo> clusters();
 
     /**
      * 新增集群

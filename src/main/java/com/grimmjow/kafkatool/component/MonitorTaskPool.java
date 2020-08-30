@@ -1,9 +1,8 @@
 package com.grimmjow.kafkatool.component;
 
 import com.google.common.collect.Maps;
-import com.grimmjow.kafkatool.entity.request.MonitorRequest;
+import com.grimmjow.kafkatool.domain.request.MonitorRequest;
 import com.grimmjow.kafkatool.task.MonitorTask;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
@@ -25,13 +24,21 @@ public class MonitorTaskPool {
         this.taskScheduler = taskScheduler;
     }
 
-    public void addTask(MonitorRequest monitorRequest, AdminClient client) {
-        MonitorTask task = new MonitorTask(monitorRequest, client);
-        Long interval = monitorRequest.getInterval();
-        ScheduledFuture<?> scheduledFuture = taskScheduler.scheduleAtFixedRate(task, interval);
-        pool.put(monitorRequest, scheduledFuture);
+    /**
+     * 添加监控任务
+     *
+     * @param monitorTask 监控任务
+     */
+    public void addTask(MonitorTask monitorTask) {
+        ScheduledFuture<?> scheduledFuture = taskScheduler.scheduleAtFixedRate(monitorTask, monitorTask.getInterval());
+        pool.put(monitorTask.getMonitorRequest(), scheduledFuture);
     }
 
+    /**
+     * 移除监控任务
+     *
+     * @param monitorRequest 监控请求信息
+     */
     public void removeTask(MonitorRequest monitorRequest) {
         ScheduledFuture<?> scheduledFuture = pool.get(monitorRequest);
         if (scheduledFuture != null) {

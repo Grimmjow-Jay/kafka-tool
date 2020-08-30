@@ -1,6 +1,6 @@
 package com.grimmjow.kafkatool.service;
 
-import com.grimmjow.kafkatool.entity.request.MonitorRequest;
+import com.grimmjow.kafkatool.domain.request.MonitorRequest;
 
 /**
  * @author Grimm

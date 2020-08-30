@@ -3,10 +3,10 @@ package com.grimmjow.kafkatool.service.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.grimmjow.kafkatool.component.ClusterClientPool;
-import com.grimmjow.kafkatool.entity.KafkaNode;
-import com.grimmjow.kafkatool.entity.KafkaTopic;
-import com.grimmjow.kafkatool.entity.KafkaTopicPartition;
-import com.grimmjow.kafkatool.entity.request.CreateTopicRequest;
+import com.grimmjow.kafkatool.domain.KafkaNode;
+import com.grimmjow.kafkatool.domain.KafkaTopic;
+import com.grimmjow.kafkatool.domain.KafkaTopicPartition;
+import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.service.TopicService;
 import lombok.extern.slf4j.Slf4j;
@@ -42,8 +42,6 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public Set<String> topics(String clusterName) {
-        BaseException.assertBlank(clusterName, "集群名为空");
-
         AdminClient kafkaAdminClient = clusterClientPool.getClient(clusterName);
         ListTopicsResult listTopicsResult = kafkaAdminClient.listTopics(new ListTopicsOptions().listInternal(true));
         KafkaFuture<Set<String>> names = listTopicsResult.names();
@@ -57,9 +55,6 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public KafkaTopic detail(String clusterName, String topic) {
-        BaseException.assertBlank(clusterName, "集群名为空");
-        BaseException.assertBlank(topic, "Topic为空");
-
         AdminClient adminClient = clusterClientPool.getClient(clusterName);
         DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(Lists.newArrayList(topic));
         KafkaFuture<TopicDescription> topicFutureMap = describeTopicsResult.values().get(topic);
@@ -98,20 +93,10 @@ public class TopicServiceImpl implements TopicService {
 
     @Override
     public void createTopic(CreateTopicRequest request) {
-        BaseException.assertNull(request, "请求参数为空");
-        String clusterName = request.getClusterName();
-        String topic = request.getTopic();
-        int partition = request.getPartition();
-        int replication = request.getReplication();
+        AdminClient kafkaAdminClient = clusterClientPool.getClient(request.getClusterName());
+        ArrayList<NewTopic> newTopics = Lists.newArrayList(
+                new NewTopic(request.getTopic(), request.getPartition(), (short) request.getReplication()));
 
-        BaseException.assertBlank(clusterName, "集群名为空");
-        BaseException.assertBlank(topic, "Topic为空");
-        BaseException.assertCondition(partition < 1, "分区数不合法");
-        BaseException.assertCondition(replication < 1 || replication > Short.MAX_VALUE, "副本数不合法");
-
-        AdminClient kafkaAdminClient = clusterClientPool.getClient(clusterName);
-
-        ArrayList<NewTopic> newTopics = Lists.newArrayList(new NewTopic(topic, partition, (short) replication));
         CreateTopicsResult createTopicsResult = kafkaAdminClient.createTopics(newTopics);
         try {
             createTopicsResult.all().get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);

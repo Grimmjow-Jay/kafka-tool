@@ -3,7 +3,7 @@ package com.grimmjow.kafkatool.service.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.grimmjow.kafkatool.component.ClusterClientPool;
-import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
+import com.grimmjow.kafkatool.domain.ConsumerTopicOffset;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.service.ConsumerService;
 import lombok.extern.slf4j.Slf4j;
@@ -42,8 +42,6 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public List<String> consumers(String clusterName) {
-        BaseException.assertBlank(clusterName, "集群名为空");
-
         AdminClient adminClient = clusterClientPool.getClient(clusterName);
         KafkaFuture<Collection<ConsumerGroupListing>> consumerGroupListingFuture = adminClient.listConsumerGroups().all();
         try {
@@ -59,9 +57,6 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public List<ConsumerTopicOffset> offsets(String clusterName, String consumerName) {
-        BaseException.assertBlank(clusterName, "集群名为空");
-        BaseException.assertBlank(consumerName, "消费者为空");
-
         AdminClient adminClient = clusterClientPool.getClient(clusterName);
 
         KafkaFuture<Map<TopicPartition, OffsetAndMetadata>> mapKafkaFuture = adminClient

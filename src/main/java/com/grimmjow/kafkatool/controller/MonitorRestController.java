@@ -1,13 +1,15 @@
 package com.grimmjow.kafkatool.controller;
 
-import com.grimmjow.kafkatool.entity.request.MonitorRequest;
-import com.grimmjow.kafkatool.entity.response.Empty;
-import com.grimmjow.kafkatool.entity.response.ResponseEntity;
+import com.grimmjow.kafkatool.domain.request.MonitorRequest;
+import com.grimmjow.kafkatool.domain.response.Empty;
+import com.grimmjow.kafkatool.domain.response.ResponseEntity;
 import com.grimmjow.kafkatool.service.MonitorService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 /**
  * @author Grimm
@@ -23,16 +25,14 @@ public class MonitorRestController {
         this.monitorService = monitorService;
     }
 
-    @PostMapping
-    @RequestMapping("/enable")
-    public ResponseEntity<Empty> enableMonitor(@RequestBody MonitorRequest monitorRequest) {
+    @PostMapping("/enable")
+    public ResponseEntity<Empty> enableMonitor(@Valid @RequestBody MonitorRequest monitorRequest) {
         monitorService.enableMonitor(monitorRequest);
         return ResponseEntity.success();
     }
 
-    @PostMapping
-    @RequestMapping("/disable")
-    public ResponseEntity<Empty> disableMonitor(@RequestBody MonitorRequest monitorRequest) {
+    @PostMapping("/disable")
+    public ResponseEntity<Empty> disableMonitor(@Valid @RequestBody MonitorRequest monitorRequest) {
         monitorService.disableMonitor(monitorRequest);
         return ResponseEntity.success();
     }

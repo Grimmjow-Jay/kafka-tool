@@ -2,11 +2,12 @@ package com.grimmjow.kafkatool.service.impl;
 
 import com.google.common.collect.Lists;
 import com.grimmjow.kafkatool.component.ClusterClientPool;
-import com.grimmjow.kafkatool.dao.ClusterDao;
-import com.grimmjow.kafkatool.entity.Cluster;
-import com.grimmjow.kafkatool.entity.KafkaNode;
+import com.grimmjow.kafkatool.domain.Cluster;
+import com.grimmjow.kafkatool.domain.KafkaNode;
 import com.grimmjow.kafkatool.exception.BaseException;
+import com.grimmjow.kafkatool.mapper.ClusterMapper;
 import com.grimmjow.kafkatool.service.ClusterService;
+import com.grimmjow.kafkatool.vo.ClusterVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.common.KafkaFuture;
@@ -17,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_OUT;
 import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
@@ -31,31 +33,30 @@ public class ClusterServiceImpl implements ClusterService {
 
     private final ClusterClientPool clusterClientPool;
 
-    private final ClusterDao clusterDao;
+    private final ClusterMapper clusterMapper;
 
-    public ClusterServiceImpl(ClusterClientPool clusterClientPool, ClusterDao clusterDao) {
+    public ClusterServiceImpl(ClusterClientPool clusterClientPool, ClusterMapper clusterMapper) {
         this.clusterClientPool = clusterClientPool;
-        this.clusterDao = clusterDao;
+        this.clusterMapper = clusterMapper;
     }
 
-
     @Override
-    public List<Cluster> clusters() {
-        return clusterDao.getClusterList();
+    public List<ClusterVo> clusters() {
+        return clusterMapper.list()
+                .stream()
+                .map(ClusterVo::convert)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void addCluster(Cluster cluster) {
-        BaseException.assertNull(cluster, "集群为空");
-        BaseException.assertBlank(cluster.getClusterName(), "集群名为空");
-
-        clusterDao.saveCluster(cluster);
+        clusterMapper.save(cluster);
     }
 
     @Override
     public void removeCluster(String clusterName) {
         clusterClientPool.disconnectIfPresent(clusterName);
-        clusterDao.removeCluster(clusterName);
+        clusterMapper.remove(clusterName);
     }
 
     @Override

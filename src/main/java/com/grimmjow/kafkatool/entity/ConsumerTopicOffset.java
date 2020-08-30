@@ -1,23 +1,15 @@
 package com.grimmjow.kafkatool.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 /**
  * @author Grimm
- * @since 2020/5/26
+ * @date 2020/8/30
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class ConsumerTopicOffset implements Serializable {
+public class ConsumerTopicOffset {
 
-    private static final long serialVersionUID = 1L;
+    private Long id;
 
     private String consumer;
 
@@ -30,5 +22,7 @@ public class ConsumerTopicOffset implements Serializable {
     private long logSize;
 
     private long lag;
+
+    private long timestamp;
 
 }

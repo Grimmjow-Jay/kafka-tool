@@ -1,9 +1,9 @@
 package com.grimmjow.kafkatool.component;
 
 import com.google.common.collect.Maps;
-import com.grimmjow.kafkatool.dao.ClusterDao;
-import com.grimmjow.kafkatool.entity.Cluster;
+import com.grimmjow.kafkatool.domain.Cluster;
 import com.grimmjow.kafkatool.exception.BaseException;
+import com.grimmjow.kafkatool.mapper.ClusterMapper;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
@@ -19,12 +19,11 @@ import java.util.Properties;
 @Component
 public class ClusterClientPool {
 
+    private final ClusterMapper clusterMapper;
     private Map<String, AdminClient> pool = Maps.newConcurrentMap();
 
-    private final ClusterDao clusterDao;
-
-    public ClusterClientPool(ClusterDao clusterDao) {
-        this.clusterDao = clusterDao;
+    public ClusterClientPool(ClusterMapper clusterMapper) {
+        this.clusterMapper = clusterMapper;
     }
 
     /**
@@ -50,7 +49,7 @@ public class ClusterClientPool {
         if (adminClient != null) {
             return adminClient;
         }
-        Cluster cluster = clusterDao.getCluster(clusterName);
+        Cluster cluster = clusterMapper.getByName(clusterName);
         BaseException.assertNull(cluster, "集群不存在");
 
         adminClient = connect(cluster);

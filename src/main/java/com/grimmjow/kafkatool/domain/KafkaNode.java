@@ -1,4 +1,4 @@
-package com.grimmjow.kafkatool.entity;
+package com.grimmjow.kafkatool.domain;
 
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;

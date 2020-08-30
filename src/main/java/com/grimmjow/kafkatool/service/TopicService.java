@@ -1,7 +1,7 @@
 package com.grimmjow.kafkatool.service;
 
-import com.grimmjow.kafkatool.entity.KafkaTopic;
-import com.grimmjow.kafkatool.entity.request.CreateTopicRequest;
+import com.grimmjow.kafkatool.domain.KafkaTopic;
+import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
 
 import java.util.Set;
 

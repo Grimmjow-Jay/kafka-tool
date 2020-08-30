@@ -1,12 +1,14 @@
 package com.grimmjow.kafkatool.controller;
 
-import com.grimmjow.kafkatool.entity.KafkaTopic;
-import com.grimmjow.kafkatool.entity.request.CreateTopicRequest;
-import com.grimmjow.kafkatool.entity.response.Empty;
-import com.grimmjow.kafkatool.entity.response.ResponseEntity;
+import com.grimmjow.kafkatool.domain.KafkaTopic;
+import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
+import com.grimmjow.kafkatool.domain.response.Empty;
+import com.grimmjow.kafkatool.domain.response.ResponseEntity;
 import com.grimmjow.kafkatool.service.TopicService;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import java.util.Set;
 
 /**
@@ -24,18 +26,18 @@ public class TopicRestController {
     }
 
     @GetMapping("/topics/{clusterName}")
-    public ResponseEntity<Set<String>> topics(@PathVariable("clusterName") String clusterName) {
+    public ResponseEntity<Set<String>> topics(@NotBlank(message = "集群名不能为空") @PathVariable("clusterName") String clusterName) {
         return ResponseEntity.success(topicService.topics(clusterName));
     }
 
     @GetMapping("/detail/{clusterName}/{topic}")
-    public ResponseEntity<KafkaTopic> detail(@PathVariable("clusterName") String clusterName,
-                                             @PathVariable("topic") String topic) {
+    public ResponseEntity<KafkaTopic> detail(@NotBlank(message = "集群名不能为空") @PathVariable("clusterName") String clusterName,
+                                             @NotBlank(message = "Topic不能为空") @PathVariable("topic") String topic) {
         return ResponseEntity.success(topicService.detail(clusterName, topic));
     }
 
     @PostMapping
-    public ResponseEntity<Empty> createTopic(@RequestBody CreateTopicRequest createTopicRequest) {
+    public ResponseEntity<Empty> createTopic(@Valid @RequestBody CreateTopicRequest createTopicRequest) {
         topicService.createTopic(createTopicRequest);
         return ResponseEntity.success();
     }
