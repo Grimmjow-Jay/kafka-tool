@@ -1,6 +1,6 @@
 package com.grimmjow.kafkatool.service;
 
-import com.grimmjow.kafkatool.domain.ConsumerTopicOffset;
+import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
 
 import java.util.List;
 
@@ -26,6 +26,6 @@ public interface ConsumerService {
      * @param consumerName 消费者名
      * @return 消费的offset信息
      */
-    List<ConsumerTopicOffset> offsets(String clusterName, String consumerName);
+    List<ConsumerTopicOffsetVo> offsets(String clusterName, String consumerName);
 
 }

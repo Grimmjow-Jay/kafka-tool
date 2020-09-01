@@ -1,9 +1,10 @@
 package com.grimmjow.kafkatool.controller;
 
-import com.grimmjow.kafkatool.domain.Cluster;
 import com.grimmjow.kafkatool.domain.KafkaNode;
+import com.grimmjow.kafkatool.domain.request.AddClusterRequest;
 import com.grimmjow.kafkatool.domain.response.Empty;
 import com.grimmjow.kafkatool.domain.response.ResponseEntity;
+import com.grimmjow.kafkatool.entity.Cluster;
 import com.grimmjow.kafkatool.service.ClusterService;
 import com.grimmjow.kafkatool.vo.ClusterVo;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +33,8 @@ public class ClusterRestController {
     }
 
     @PostMapping
-    public ResponseEntity<Empty> addCluster(@Valid @RequestBody Cluster cluster) {
-        clusterService.addCluster(cluster);
+    public ResponseEntity<Empty> addCluster(@Valid @RequestBody AddClusterRequest request) {
+        clusterService.addCluster(new Cluster(null, request.getClusterName(), request.getBootstrapServers()));
         return ResponseEntity.success();
     }
 

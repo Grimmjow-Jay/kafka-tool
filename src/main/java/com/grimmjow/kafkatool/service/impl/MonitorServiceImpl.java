@@ -1,11 +1,16 @@
 package com.grimmjow.kafkatool.service.impl;
 
-import com.grimmjow.kafkatool.component.ClusterClientPool;
+import com.grimmjow.kafkatool.component.KafkaClientPool;
 import com.grimmjow.kafkatool.component.MonitorTaskPool;
-import com.grimmjow.kafkatool.domain.request.MonitorRequest;
+import com.grimmjow.kafkatool.domain.request.MonitorDataRequest;
+import com.grimmjow.kafkatool.domain.request.MonitorTaskRequest;
+import com.grimmjow.kafkatool.mapper.ConsumerTopicOffsetMapper;
 import com.grimmjow.kafkatool.service.MonitorService;
 import com.grimmjow.kafkatool.task.MonitorTask;
+import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @author Grimm
@@ -16,21 +21,54 @@ public class MonitorServiceImpl implements MonitorService {
 
     private final MonitorTaskPool monitorTaskPool;
 
-    private final ClusterClientPool clusterClientPool;
+    private final KafkaClientPool kafkaClientPool;
 
-    public MonitorServiceImpl(MonitorTaskPool monitorTaskPool, ClusterClientPool clusterClientPool) {
+    private final ConsumerTopicOffsetMapper consumerTopicOffsetMapper;
+
+
+    public MonitorServiceImpl(MonitorTaskPool monitorTaskPool,
+                              KafkaClientPool kafkaClientPool,
+                              ConsumerTopicOffsetMapper consumerTopicOffsetMapper) {
         this.monitorTaskPool = monitorTaskPool;
-        this.clusterClientPool = clusterClientPool;
+        this.kafkaClientPool = kafkaClientPool;
+        this.consumerTopicOffsetMapper = consumerTopicOffsetMapper;
     }
 
     @Override
-    public void enableMonitor(MonitorRequest monitorRequest) {
-        monitorTaskPool.addTask(new MonitorTask(monitorRequest, clusterClientPool));
-
+    public void enableMonitor(MonitorTaskRequest monitorTaskRequest) {
+        monitorTaskPool.addTask(new MonitorTask(monitorTaskRequest, kafkaClientPool, consumerTopicOffsetMapper));
     }
 
     @Override
-    public void disableMonitor(MonitorRequest monitorRequest) {
-        monitorTaskPool.removeTask(monitorRequest);
+    public void disableMonitor(MonitorTaskRequest monitorTaskRequest) {
+        monitorTaskPool.removeTask(monitorTaskRequest);
+    }
+
+    @Override
+    public List<ConsumerTopicOffsetVo> offsetData(MonitorDataRequest monitorDataRequest) {
+        List<ConsumerTopicOffsetVo> consumerTopicOffsetVoList;
+
+        if (monitorDataRequest.getPartition() == null) {
+            consumerTopicOffsetVoList = consumerTopicOffsetMapper.listByIntervalIgnorePartition(
+                    monitorDataRequest.getStartTime(),
+                    monitorDataRequest.getEndTime(),
+                    monitorDataRequest.getClusterName(),
+                    monitorDataRequest.getConsumer(),
+                    monitorDataRequest.getTopic(),
+                    monitorDataRequest.getInterval());
+        } else {
+            consumerTopicOffsetVoList = consumerTopicOffsetMapper.listByInterval(
+                    monitorDataRequest.getStartTime(),
+                    monitorDataRequest.getEndTime(),
+                    monitorDataRequest.getClusterName(),
+                    monitorDataRequest.getConsumer(),
+                    monitorDataRequest.getTopic(),
+                    monitorDataRequest.getInterval(),
+                    monitorDataRequest.getPartition());
+        }
+
+        consumerTopicOffsetVoList.forEach(ConsumerTopicOffsetVo::updateLag);
+
+        return consumerTopicOffsetVoList;
     }
 }

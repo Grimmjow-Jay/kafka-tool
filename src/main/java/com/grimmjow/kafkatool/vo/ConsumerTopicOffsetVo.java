@@ -1,28 +1,81 @@
 package com.grimmjow.kafkatool.vo;
 
+import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /**
  * @author Grimm
- * @date 2020/8/30
+ * @since 2020/5/26
  */
 @Data
-public class ConsumerTopicOffsetVo {
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class ConsumerTopicOffsetVo implements Serializable {
 
-    private LocalDateTime time;
+    private static final long serialVersionUID = 1L;
 
-    private String topic;
+    /**
+     * 集群名
+     */
+    private String clusterName;
 
+    /**
+     * 消费者
+     */
     private String consumer;
 
-    private String partition;
+    /**
+     * Topic
+     */
+    private String topic;
 
-    private long offset;
+    /**
+     * 分区
+     */
+    private Integer partition;
 
-    private long lag;
+    /**
+     * offset
+     */
+    private Long offset;
 
-    private long logSize;
+    /**
+     * logSize
+     */
+    private Long logSize;
+
+    /**
+     * lag
+     */
+    private Long lag;
+
+    /**
+     * 时间戳
+     */
+    private Long timestamp;
+
+    public static ConsumerTopicOffset convert(ConsumerTopicOffsetVo consumerTopicOffsetVo) {
+        return ConsumerTopicOffset.builder()
+                .consumer(consumerTopicOffsetVo.getConsumer())
+                .topic(consumerTopicOffsetVo.getTopic())
+                .partition(consumerTopicOffsetVo.getPartition())
+                .offset(consumerTopicOffsetVo.getOffset())
+                .logSize(consumerTopicOffsetVo.getLogSize())
+                .lag(consumerTopicOffsetVo.getLag())
+                .timestamp(System.currentTimeMillis())
+                .build();
+    }
+
+    public void updateLag() {
+        if (offset != null && logSize != null) {
+            lag = logSize - offset;
+        }
+    }
 
 }

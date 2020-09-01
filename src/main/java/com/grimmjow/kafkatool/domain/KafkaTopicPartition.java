@@ -20,12 +20,24 @@ public class KafkaTopicPartition implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 分区
+     */
     private int partition;
 
+    /**
+     * offset
+     */
     private long offset;
 
+    /**
+     * 副本信息
+     */
     private List<KafkaNode> replicas;
 
+    /**
+     * leader
+     */
     private KafkaNode leader;
 
 }

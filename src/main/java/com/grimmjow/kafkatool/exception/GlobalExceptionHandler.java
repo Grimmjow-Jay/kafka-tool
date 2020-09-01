@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.util.CollectionUtils;
+import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -63,14 +64,27 @@ public class GlobalExceptionHandler {
      * @param e 参数异常
      */
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    public ResponseEntity<Empty> handleBindException(MethodArgumentNotValidException e) {
-        BindingResult bindingResult = e.getBindingResult();
-        if (!bindingResult.hasErrors()) {
-            return ResponseEntity.error(e.getMessage(), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Empty> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        return getBindingResultResponse(e.getBindingResult(), e.getMessage());
+    }
+
+    /**
+     * 参数异常
+     *
+     * @param e 参数异常
+     */
+    @ExceptionHandler(value = BindException.class)
+    public ResponseEntity<Empty> handleBindException(BindException e) {
+        return getBindingResultResponse(e.getBindingResult(), e.getMessage());
+    }
+
+    private ResponseEntity<Empty> getBindingResultResponse(BindingResult bindingResult, String message) {
+        if (bindingResult == null || !bindingResult.hasErrors()) {
+            return ResponseEntity.error(message, HttpStatus.BAD_REQUEST);
         }
         List<ObjectError> allErrors = bindingResult.getAllErrors();
         if (CollectionUtils.isEmpty(allErrors)) {
-            return ResponseEntity.error(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return ResponseEntity.error(message, HttpStatus.BAD_REQUEST);
         }
         String errorMsg = allErrors
                 .stream()

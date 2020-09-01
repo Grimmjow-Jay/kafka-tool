@@ -1,8 +1,8 @@
 package com.grimmjow.kafkatool.controller;
 
-import com.grimmjow.kafkatool.domain.ConsumerTopicOffset;
 import com.grimmjow.kafkatool.domain.response.ResponseEntity;
 import com.grimmjow.kafkatool.service.ConsumerService;
+import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,7 +32,7 @@ public class ConsumerRestController {
     }
 
     @GetMapping("/offsets/{clusterName}/{consumerName}")
-    public ResponseEntity<List<ConsumerTopicOffset>> offsets(
+    public ResponseEntity<List<ConsumerTopicOffsetVo>> offsets(
             @NotBlank(message = "集群名不能为空") @PathVariable String clusterName,
             @NotBlank(message = "消费者名不能为空") @PathVariable String consumerName) {
         return ResponseEntity.success(consumerService.offsets(clusterName, consumerName));

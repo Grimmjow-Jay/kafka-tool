@@ -1,27 +1,19 @@
 package com.grimmjow.kafkatool.task;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.grimmjow.kafkatool.component.ClusterClientPool;
-import com.grimmjow.kafkatool.domain.ConsumerTopicOffset;
-import com.grimmjow.kafkatool.domain.request.MonitorRequest;
+import com.grimmjow.kafkatool.component.KafkaClientPool;
+import com.grimmjow.kafkatool.domain.request.MonitorTaskRequest;
+import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
+import com.grimmjow.kafkatool.exception.KafkaClientException;
+import com.grimmjow.kafkatool.mapper.ConsumerTopicOffsetMapper;
+import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.*;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.KafkaFuture;
-import org.apache.kafka.common.TopicPartition;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-
-import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_OUT;
-import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 
 /**
  * @author Grimm
@@ -31,31 +23,27 @@ import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 public class MonitorTask implements Runnable, MonitorTrigger {
 
     @Getter
-    private MonitorRequest monitorRequest;
+    private MonitorTaskRequest monitorTaskRequest;
 
-    private ClusterClientPool clusterClientPool;
+    private KafkaClientPool kafkaClientPool;
 
-    private long timeout;
-
-    private TimeUnit unit;
+    private ConsumerTopicOffsetMapper consumerTopicOffsetMapper;
 
     private AtomicBoolean running;
 
-    public MonitorTask(MonitorRequest monitorRequest, ClusterClientPool clusterClientPool, long timeout, TimeUnit unit) {
-        this.monitorRequest = monitorRequest;
-        this.clusterClientPool = clusterClientPool;
-        this.timeout = timeout;
-        this.unit = unit;
-        this.running = new AtomicBoolean(false);
-    }
+    @Setter
+    private int partitionSize = 20;
 
-    public MonitorTask(MonitorRequest monitorRequest, ClusterClientPool clusterClientPool) {
-        this(monitorRequest, clusterClientPool, DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
+    public MonitorTask(MonitorTaskRequest monitorTaskRequest, KafkaClientPool kafkaClientPool, ConsumerTopicOffsetMapper consumerTopicOffsetMapper) {
+        this.monitorTaskRequest = monitorTaskRequest;
+        this.kafkaClientPool = kafkaClientPool;
+        this.consumerTopicOffsetMapper = consumerTopicOffsetMapper;
+        this.running = new AtomicBoolean(false);
     }
 
     @Override
     public long getInterval() {
-        return monitorRequest.getInterval();
+        return monitorTaskRequest.getInterval();
     }
 
     @Override
@@ -65,59 +53,33 @@ public class MonitorTask implements Runnable, MonitorTrigger {
             return;
         }
         try {
-            List<ConsumerTopicOffset> consumerTopicOffset = consumerTopicOffset();
-            saveOffset(consumerTopicOffset);
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            List<ConsumerTopicOffsetVo> consumerTopicOffsetVo = consumerTopicOffset();
+            saveOffset(consumerTopicOffsetVo);
+        } catch (KafkaClientException e) {
             log.error(e.getMessage(), e);
         } finally {
-            running.compareAndSet(true, false);
+            running.set(false);
         }
     }
 
-    private List<ConsumerTopicOffset> consumerTopicOffset() throws ExecutionException, InterruptedException, TimeoutException {
-        AdminClient client = clusterClientPool.getClient(monitorRequest.getClusterName());
-        String topic = monitorRequest.getTopic();
-
-        KafkaFuture<TopicDescription> topicDescFuture = client
-                .describeTopics(Lists.newArrayList(topic)).values().get(topic);
-        TopicDescription topicDescription = topicDescFuture.get(timeout, unit);
-        List<TopicPartition> topicPartitions = topicDescription.partitions().stream()
-                .map(e -> new TopicPartition(topic, e.partition()))
-                .collect(Collectors.toList());
-        KafkaFuture<Map<TopicPartition, OffsetAndMetadata>> mapKafkaFuture = client
-                .listConsumerGroupOffsets(monitorRequest.getConsumer(), new ListConsumerGroupOffsetsOptions().topicPartitions(topicPartitions))
-                .partitionsToOffsetAndMetadata();
-        Map<TopicPartition, OffsetAndMetadata> topicPartitionOffsetAndMetadataMap = mapKafkaFuture.get();
-
-        Map<TopicPartition, ConsumerTopicOffset> consumerTopicOffsetMap = Maps.newLinkedHashMap();
-        Map<TopicPartition, OffsetSpec> topicPartitionOffsets = Maps.newHashMap();
-        topicPartitionOffsetAndMetadataMap.forEach((topicPartition, offsetAndMetadata) -> {
-            topicPartitionOffsets.put(topicPartition, OffsetSpec.latest());
-            ConsumerTopicOffset consumerTopicOffset = ConsumerTopicOffset.builder()
-                    .consumer(monitorRequest.getConsumer())
-                    .partition(topicPartition.partition())
-                    .topic(topic)
-                    .offset(offsetAndMetadata.offset())
-                    .build();
-            consumerTopicOffsetMap.put(topicPartition, consumerTopicOffset);
-        });
-        KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>> topicPartitionOffsetsInfo = client
-                .listOffsets(topicPartitionOffsets).all();
-
-        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> listOffsetsInfoMap = topicPartitionOffsetsInfo.get(timeout, unit);
-        listOffsetsInfoMap.forEach((k, v) -> {
-            ConsumerTopicOffset consumerTopicOffset = consumerTopicOffsetMap.get(k);
-            if (consumerTopicOffset != null) {
-                consumerTopicOffset.setLogSize(v.offset());
-                consumerTopicOffset.setLag(consumerTopicOffset.getLogSize() - consumerTopicOffset.getOffset());
-            }
-        });
-
-        return Lists.newArrayList(consumerTopicOffsetMap.values());
+    /**
+     * 查询监控数据
+     */
+    private List<ConsumerTopicOffsetVo> consumerTopicOffset() throws KafkaClientException {
+        return kafkaClientPool.getClient(monitorTaskRequest.getClusterName())
+                .offsets(monitorTaskRequest.getConsumer(), monitorTaskRequest.getTopic());
     }
 
-    private void saveOffset(List<ConsumerTopicOffset> consumerTopicOffset) {
-        System.out.println(consumerTopicOffset);
+    /**
+     * 保存监控数据
+     */
+    private void saveOffset(List<ConsumerTopicOffsetVo> consumerTopicOffsetVo) {
+        List<ConsumerTopicOffset> consumerTopicOffsetList = consumerTopicOffsetVo.stream()
+                .map(ConsumerTopicOffsetVo::convert)
+                .collect(Collectors.toList());
+        Lists.partition(consumerTopicOffsetList, partitionSize).stream()
+                .filter(e -> e != null && !e.isEmpty())
+                .forEach(consumerTopicOffsetMapper::saveList);
     }
 
 }

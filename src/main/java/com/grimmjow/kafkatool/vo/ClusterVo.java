@@ -1,6 +1,7 @@
 package com.grimmjow.kafkatool.vo;
 
-import com.grimmjow.kafkatool.domain.Cluster;
+import com.grimmjow.kafkatool.entity.Cluster;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class ClusterVo {
 
     private Long id;

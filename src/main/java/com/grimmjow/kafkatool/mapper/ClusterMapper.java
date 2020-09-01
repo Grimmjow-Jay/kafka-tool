@@ -1,6 +1,6 @@
 package com.grimmjow.kafkatool.mapper;
 
-import com.grimmjow.kafkatool.domain.Cluster;
+import com.grimmjow.kafkatool.entity.Cluster;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

@@ -1,19 +1,20 @@
-package com.grimmjow.kafkatool.domain;
+package com.grimmjow.kafkatool.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import javax.validation.constraints.NotBlank;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Grimm
  * @since 2020/5/26
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Cluster {
 
     private Long id;
 
-    @NotBlank(message = "集群名不能为空")
     private String clusterName;
 
     private String bootstrapServers;

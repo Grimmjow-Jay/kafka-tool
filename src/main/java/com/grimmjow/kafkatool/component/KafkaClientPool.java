@@ -1,11 +1,10 @@
 package com.grimmjow.kafkatool.component;
 
 import com.google.common.collect.Maps;
-import com.grimmjow.kafkatool.domain.Cluster;
-import com.grimmjow.kafkatool.exception.BaseException;
+import com.grimmjow.kafkatool.entity.Cluster;
+import com.grimmjow.kafkatool.exception.KafkaClientException;
 import com.grimmjow.kafkatool.mapper.ClusterMapper;
 import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.springframework.stereotype.Component;
 
@@ -17,12 +16,12 @@ import java.util.Properties;
  * @date 2020/8/29
  */
 @Component
-public class ClusterClientPool {
+public class KafkaClientPool {
 
     private final ClusterMapper clusterMapper;
-    private Map<String, AdminClient> pool = Maps.newConcurrentMap();
+    private Map<String, KafkaClient> pool = Maps.newConcurrentMap();
 
-    public ClusterClientPool(ClusterMapper clusterMapper) {
+    public KafkaClientPool(ClusterMapper clusterMapper) {
         this.clusterMapper = clusterMapper;
     }
 
@@ -32,10 +31,10 @@ public class ClusterClientPool {
      * @param cluster 集群
      * @return 连接客户端
      */
-    public AdminClient connect(Cluster cluster) {
+    public KafkaClient connect(Cluster cluster) {
         Properties props = new Properties();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, cluster.getBootstrapServers());
-        return KafkaAdminClient.create(props);
+        return new KafkaClient(KafkaAdminClient.create(props));
     }
 
     /**
@@ -44,17 +43,19 @@ public class ClusterClientPool {
      * @param clusterName 集群名
      * @return 连接client
      */
-    public AdminClient getClient(String clusterName) {
-        AdminClient adminClient = pool.get(clusterName);
-        if (adminClient != null) {
-            return adminClient;
+    public KafkaClient getClient(String clusterName) throws KafkaClientException {
+        KafkaClient kafkaClient = pool.get(clusterName);
+        if (kafkaClient != null) {
+            return kafkaClient;
         }
         Cluster cluster = clusterMapper.getByName(clusterName);
-        BaseException.assertNull(cluster, "集群不存在");
+        if (cluster == null) {
+            throw new KafkaClientException("集群不存在");
+        }
 
-        adminClient = connect(cluster);
-        pool.put(clusterName, adminClient);
-        return adminClient;
+        kafkaClient = connect(cluster);
+        pool.put(clusterName, kafkaClient);
+        return kafkaClient;
     }
 
     /**
@@ -63,9 +64,9 @@ public class ClusterClientPool {
      * @param clusterName 集群名
      */
     public void disconnectIfPresent(String clusterName) {
-        AdminClient adminClient = pool.get(clusterName);
-        if (adminClient != null) {
-            adminClient.close();
+        KafkaClient kafkaClient = pool.get(clusterName);
+        if (kafkaClient != null) {
+            kafkaClient.close();
             pool.remove(clusterName);
         }
     }
@@ -75,7 +76,7 @@ public class ClusterClientPool {
      *
      * @param clusterName 集群名
      */
-    public void reconnect(String clusterName) {
+    public void reconnect(String clusterName) throws KafkaClientException {
         disconnectIfPresent(clusterName);
         getClient(clusterName);
     }

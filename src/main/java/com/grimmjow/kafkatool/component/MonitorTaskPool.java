@@ -1,7 +1,7 @@
 package com.grimmjow.kafkatool.component;
 
 import com.google.common.collect.Maps;
-import com.grimmjow.kafkatool.domain.request.MonitorRequest;
+import com.grimmjow.kafkatool.domain.request.MonitorTaskRequest;
 import com.grimmjow.kafkatool.task.MonitorTask;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class MonitorTaskPool {
 
     private final TaskScheduler taskScheduler;
 
-    private final Map<MonitorRequest, ScheduledFuture<?>> pool = Maps.newConcurrentMap();
+    private final Map<MonitorTaskRequest, ScheduledFuture<?>> pool = Maps.newConcurrentMap();
 
     public MonitorTaskPool(TaskScheduler taskScheduler) {
         this.taskScheduler = taskScheduler;
@@ -31,19 +31,19 @@ public class MonitorTaskPool {
      */
     public void addTask(MonitorTask monitorTask) {
         ScheduledFuture<?> scheduledFuture = taskScheduler.scheduleAtFixedRate(monitorTask, monitorTask.getInterval());
-        pool.put(monitorTask.getMonitorRequest(), scheduledFuture);
+        pool.put(monitorTask.getMonitorTaskRequest(), scheduledFuture);
     }
 
     /**
      * 移除监控任务
      *
-     * @param monitorRequest 监控请求信息
+     * @param monitorTaskRequest 监控请求信息
      */
-    public void removeTask(MonitorRequest monitorRequest) {
-        ScheduledFuture<?> scheduledFuture = pool.get(monitorRequest);
+    public void removeTask(MonitorTaskRequest monitorTaskRequest) {
+        ScheduledFuture<?> scheduledFuture = pool.get(monitorTaskRequest);
         if (scheduledFuture != null) {
             scheduledFuture.cancel(true);
-            pool.remove(monitorRequest);
+            pool.remove(monitorTaskRequest);
         }
     }
 }

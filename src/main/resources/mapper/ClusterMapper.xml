@@ -3,29 +3,29 @@
 <mapper namespace="com.grimmjow.kafkatool.mapper.ClusterMapper">
 
     <insert id="save">
-        INSERT INTO cluster (cluster_name, bootstrap_servers)
+        INSERT INTO `cluster` (`cluster_name`, `bootstrap_servers`)
         VALUES (#{cluster.clusterName}, #{cluster.bootstrapServers});
     </insert>
 
     <delete id="remove">
         DELETE
-        FROM cluster
-        WHERE cluster_name = #{clusterName}
+        FROM `cluster`
+        WHERE `cluster_name` = #{clusterName}
     </delete>
 
-    <select id="list" resultType="com.grimmjow.kafkatool.domain.Cluster">
-        SELECT id,
-               cluster_name,
-               bootstrap_servers
-        FROM cluster
+    <select id="list" resultType="com.grimmjow.kafkatool.entity.Cluster">
+        SELECT `id`,
+               `cluster_name`,
+               `bootstrap_servers`
+        FROM `cluster`
     </select>
 
-    <select id="getByName" resultType="com.grimmjow.kafkatool.domain.Cluster">
-        SELECT id,
-               cluster_name,
-               bootstrap_servers
-        FROM cluster
-        WHERE cluster_name = #{clusterName}
+    <select id="getByName" resultType="com.grimmjow.kafkatool.entity.Cluster">
+        SELECT `id`,
+               `cluster_name`,
+               `bootstrap_servers`
+        FROM `cluster`
+        WHERE `cluster_name` = #{clusterName}
     </select>
 
 </mapper>

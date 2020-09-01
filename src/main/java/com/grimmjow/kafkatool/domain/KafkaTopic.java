@@ -20,10 +20,19 @@ public class KafkaTopic implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Topic名
+     */
     private String name;
 
+    /**
+     * 是否内置Topic
+     */
     private boolean internal;
 
+    /**
+     * 分区信息
+     */
     private List<KafkaTopicPartition> partitions;
 
 }

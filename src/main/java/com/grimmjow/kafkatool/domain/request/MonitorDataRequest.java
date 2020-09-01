@@ -1,18 +1,16 @@
 package com.grimmjow.kafkatool.domain.request;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
  * @author Grimm
- * @date 2020/8/28
+ * @date 2020/9/1
  */
 @Data
-@EqualsAndHashCode
-public class MonitorRequest {
+public class MonitorDataRequest {
 
     /**
      * 集群名
@@ -33,9 +31,26 @@ public class MonitorRequest {
     private String topic;
 
     /**
-     * 监控时间间隔（毫秒）
+     * 分区
+     */
+    private Integer partition;
+
+    /**
+     * 时间间隔（毫秒）
      */
     @NotNull(message = "间隔时间不能为空")
     private Long interval;
+
+    /**
+     * 最小时间
+     */
+    @NotNull(message = "最小时间非法")
+    private Long startTime;
+
+    /**
+     * 最大时间
+     */
+    @NotNull(message = "最大时间非法")
+    private Long endTime;
 
 }

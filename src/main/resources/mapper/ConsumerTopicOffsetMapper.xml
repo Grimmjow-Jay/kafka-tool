@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.grimmjow.kafkatool.mapper.ConsumerTopicOffsetMapper">
+
+    <insert id="save">
+        INSERT INTO `consumer_topic_offset`
+        (`consumer`, `topic`, `partition`, `offset`, `log_size`, `lag`, `timestamp`)
+        VALUES (#{consumerTopicOffset.consumer},
+                #{consumerTopicOffset.topic},
+                #{consumerTopicOffset.partition},
+                #{consumerTopicOffset.offset},
+                #{consumerTopicOffset.logSize},
+                #{consumerTopicOffset.lag},
+                #{consumerTopicOffset.timestamp});
+    </insert>
+
+    <insert id="saveList">
+        INSERT INTO `consumer_topic_offset`
+        (`consumer`, `topic`, `partition`, `offset`, `log_size`, `lag`, `timestamp`)
+        VALUES
+        <foreach collection="consumerTopicOffsetList" item="consumerTopicOffset" separator=",">
+            (#{consumerTopicOffset.consumer},
+            #{consumerTopicOffset.topic},
+            #{consumerTopicOffset.partition},
+            #{consumerTopicOffset.offset},
+            #{consumerTopicOffset.logSize},
+            #{consumerTopicOffset.lag},
+            #{consumerTopicOffset.timestamp})
+        </foreach>
+    </insert>
+
+    <select id="list" resultType="com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo">
+        SELECT `id`,
+               `consumer`,
+               `topic`,
+               `partition`,
+               `offset`,
+               `log_size`,
+               `lag`,
+               `timestamp`
+        FROM `consumer_topic_offset`
+        WHERE `timestamp` &gt;= #{startTime}
+          AND `timestamp` &lt;= #{endTime}
+          AND `consumer` = #{consumer}
+          AND `topic` = #{topic}
+
+    </select>
+
+    <select id="listByInterval" resultType="com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo">
+        SELECT #{clusterName}              AS `cluster_name`,
+               #{consumer}                 AS `consumer`,
+               #{topic}                    AS `topic`,
+               #{partition}                AS `partition`,
+               MAX(`offset`)               AS `offset`,
+               MAX(`log_size`)             AS `log_size`,
+               (`timestamp` / #{interval}) AS `timestamp`
+        FROM `consumer_topic_offset`
+        WHERE `timestamp` &gt;= #{startTime}
+          AND `timestamp` &lt;= #{endTime}
+          AND `cluster_name` = #{clusterName}
+          AND `consumer` = #{consumer}
+          AND `topic` = #{topic}
+          AND `partition` = #{partition}
+        GROUP BY (`timestamp` / #{interval})
+    </select>
+
+    <select id="listByIntervalIgnorePartition" resultType="com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo">
+        SELECT #{clusterName}    AS `cluster_name`,
+               #{consumer}       AS `consumer`,
+               #{topic}          AS `topic`,
+               SUM(t.`offset`)   AS `offset`,
+               SUM(t.`log_size`) AS `log_size`,
+               t.`timestamp`     AS `timestamp`
+        FROM (
+                 SELECT MAX(`offset`)               AS `offset`,
+                        MAX(`log_size`)             AS `log_size`,
+                        (`timestamp` / #{interval}) AS `timestamp`
+                 FROM `consumer_topic_offset`
+                 WHERE `timestamp` &gt;= #{startTime}
+                   AND `timestamp` &lt;= #{endTime}
+                   AND `cluster_name` = #{clusterName}
+                   AND `consumer` = #{consumer}
+                   AND `topic` = #{topic}
+                 GROUP BY (`timestamp` / #{interval})) t
+        GROUP BY t.`timestamp`
+    </select>
+
+</mapper>

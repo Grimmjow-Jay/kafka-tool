@@ -1,6 +1,10 @@
 package com.grimmjow.kafkatool.service;
 
-import com.grimmjow.kafkatool.domain.request.MonitorRequest;
+import com.grimmjow.kafkatool.domain.request.MonitorDataRequest;
+import com.grimmjow.kafkatool.domain.request.MonitorTaskRequest;
+import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
+
+import java.util.List;
 
 /**
  * @author Grimm
@@ -11,15 +15,23 @@ public interface MonitorService {
     /**
      * 开启一个监控
      *
-     * @param monitorRequest 监控请求参数
+     * @param monitorTaskRequest 监控请求参数
      */
-    void enableMonitor(MonitorRequest monitorRequest);
+    void enableMonitor(MonitorTaskRequest monitorTaskRequest);
 
     /**
      * 禁用一个监控
      *
-     * @param monitorRequest 监控请求参数
+     * @param monitorTaskRequest 监控请求参数
      */
-    void disableMonitor(MonitorRequest monitorRequest);
+    void disableMonitor(MonitorTaskRequest monitorTaskRequest);
+
+    /**
+     * 查询监控数据
+     *
+     * @param monitorDataRequest 查询条件参数
+     * @return 监控数据
+     */
+    List<ConsumerTopicOffsetVo> offsetData(MonitorDataRequest monitorDataRequest);
 
 }

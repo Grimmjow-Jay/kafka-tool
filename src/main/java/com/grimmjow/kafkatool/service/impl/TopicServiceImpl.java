@@ -1,30 +1,15 @@
 package com.grimmjow.kafkatool.service.impl;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.grimmjow.kafkatool.component.ClusterClientPool;
-import com.grimmjow.kafkatool.domain.KafkaNode;
+import com.grimmjow.kafkatool.component.KafkaClientPool;
 import com.grimmjow.kafkatool.domain.KafkaTopic;
-import com.grimmjow.kafkatool.domain.KafkaTopicPartition;
 import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
 import com.grimmjow.kafkatool.exception.BaseException;
+import com.grimmjow.kafkatool.exception.KafkaClientException;
 import com.grimmjow.kafkatool.service.TopicService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.*;
-import org.apache.kafka.common.KafkaFuture;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.TopicPartitionInfo;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
-import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_OUT;
-import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 
 /**
  * @author Grimm
@@ -34,75 +19,40 @@ import static com.grimmjow.kafkatool.config.ConstantConfig.DEFAULT_TIME_UNIT;
 @Slf4j
 public class TopicServiceImpl implements TopicService {
 
-    private final ClusterClientPool clusterClientPool;
+    private final KafkaClientPool kafkaClientPool;
 
-    public TopicServiceImpl(ClusterClientPool clusterClientPool) {
-        this.clusterClientPool = clusterClientPool;
+    public TopicServiceImpl(KafkaClientPool kafkaClientPool) {
+        this.kafkaClientPool = kafkaClientPool;
     }
 
     @Override
     public Set<String> topics(String clusterName) {
-        AdminClient kafkaAdminClient = clusterClientPool.getClient(clusterName);
-        ListTopicsResult listTopicsResult = kafkaAdminClient.listTopics(new ListTopicsOptions().listInternal(true));
-        KafkaFuture<Set<String>> names = listTopicsResult.names();
         try {
-            return names.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            return kafkaClientPool.getClient(clusterName).topics();
+        } catch (KafkaClientException e) {
             log.error("获取集群Topic列表异常", e);
-            throw new BaseException("获取集群Topic列表异常:" + e.getMessage());
+            throw new BaseException("获取集群Topic列表异常");
         }
     }
 
     @Override
     public KafkaTopic detail(String clusterName, String topic) {
-        AdminClient adminClient = clusterClientPool.getClient(clusterName);
-        DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(Lists.newArrayList(topic));
-        KafkaFuture<TopicDescription> topicFutureMap = describeTopicsResult.values().get(topic);
-        TopicDescription topicDescription;
         try {
-            topicDescription = topicFutureMap.get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            return kafkaClientPool.getClient(clusterName).topicDetail(topic);
+        } catch (KafkaClientException e) {
             log.error("获取集群Topic详情异常", e);
-            throw new BaseException("获取集群Topic详情异常:" + e.getMessage());
+            throw new BaseException("获取集群Topic详情异常");
         }
-        List<KafkaTopicPartition> partitionList = Lists.newArrayList();
-        Map<TopicPartition, OffsetSpec> topicPartitionOffsets = Maps.newHashMap();
-        Map<Integer, KafkaTopicPartition> partitionMap = Maps.newHashMap();
-        for (TopicPartitionInfo partitionInfo : topicDescription.partitions()) {
-            KafkaTopicPartition kafkaTopicPartition = KafkaTopicPartition.builder()
-                    .partition(partitionInfo.partition())
-                    .leader(KafkaNode.convert(partitionInfo.leader()))
-                    .replicas(KafkaNode.convert(partitionInfo.replicas()))
-                    .build();
-            partitionList.add(kafkaTopicPartition);
-            partitionMap.put(partitionInfo.partition(), kafkaTopicPartition);
-            topicPartitionOffsets.put(new TopicPartition(topic, partitionInfo.partition()), OffsetSpec.latest());
-        }
-        ListOffsetsResult listOffsetsResult = adminClient.listOffsets(topicPartitionOffsets);
-        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> topicPartitionOffsetsMap;
-        try {
-            topicPartitionOffsetsMap = listOffsetsResult.all().get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            log.error("获取集群Topic详情异常", e);
-            throw new BaseException("获取集群Topic详情异常:" + e.getMessage());
-        }
-        topicPartitionOffsetsMap.forEach((k, v) -> partitionMap.get(k.partition()).setOffset(v.offset()));
-
-        return new KafkaTopic(topicDescription.name(), topicDescription.isInternal(), partitionList);
     }
 
     @Override
     public void createTopic(CreateTopicRequest request) {
-        AdminClient kafkaAdminClient = clusterClientPool.getClient(request.getClusterName());
-        ArrayList<NewTopic> newTopics = Lists.newArrayList(
-                new NewTopic(request.getTopic(), request.getPartition(), (short) request.getReplication()));
-
-        CreateTopicsResult createTopicsResult = kafkaAdminClient.createTopics(newTopics);
         try {
-            createTopicsResult.all().get(DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            kafkaClientPool.getClient(request.getClusterName())
+                    .createTopic(request.getTopic(), request.getPartition(), (short) request.getReplication());
+        } catch (KafkaClientException e) {
             log.error("创建Topic异常", e);
-            throw new BaseException("创建Topic异常:" + e.getMessage());
+            throw new BaseException("创建Topic异常");
         }
     }
 }
