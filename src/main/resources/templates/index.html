@@ -11,9 +11,8 @@
     <div class="layui-input-inline">
         <label id="cluster-select"></label>
     </div>
-    <div style="float: right">
+    <div style="float: right;padding: 10px">
         <button class="layui-btn" id="add-cluster-btn" type="button">添加集群</button>
-        <button class="layui-btn" id="add-monitor-btn" type="button">添加监控</button>
     </div>
 </div>
 <br/>
@@ -100,23 +99,62 @@
 
         <!-- Offset监控 -->
         <div class="layui-tab-item">
-            <div id="monitor-chart" style="width: 1600px;height:800px;"></div>
+            <form class="layui-form">
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 50px">消费者</label>
+                    <div class="layui-input-inline">
+                        <label>
+                            <select id="show-monitor-consumer-select" lay-search name="consumer">
+                                <option value="">选择消费者</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label class="layui-form-label" style="width: 40px">Topic</label>
+                    <div class="layui-input-inline">
+                        <label>
+                            <select id="show-monitor-topic-select" lay-search name="topic">
+                                <option value="">选择Topic</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label class="layui-form-label" style="width: 62px">时间范围</label>
+                    <div class="layui-input-inline" style="width: 300px">
+                        <label>
+                            <input class="layui-input" id="show-monitor-time-range" name="timeRange"
+                                   placeholder="时间范围" type="text">
+                        </label>
+                    </div>
+                    <label class="layui-form-label" style="width: 82px">时间间隔(秒)</label>
+                    <div class="layui-input-inline" style="width: 70px">
+                        <label>
+                            <input autocomplete="off" class="layui-input" name="interval" type="number">
+                        </label>
+                    </div>
+                    <div class="layui-input-inline" style="width: 80px; margin-right: 0">
+                        <button class="layui-btn layui-btn-normal" lay-filter="show-monitor" lay-submit>确 定</button>
+                    </div>
+                    <div style="float: right">
+                        <button class="layui-btn" id="add-monitor-btn" type="button">添加监控</button>
+                    </div>
+                </div>
+            </form>
+            <div id="monitor-chart" style="width: 1400px;height:600px;"></div>
         </div>
     </div>
 </div>
 <div id="add-cluster-div" style="display: none">
     <form class="layui-form" style="padding-top: 5%">
         <div class="layui-form-item">
-            <label class="layui-form-label" style="width: 15%">集群名</label>
-            <div class="layui-input-block" style="margin-left: 20%;margin-right: 15%">
+            <label class="layui-form-label" style="width: 20%">集群名</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
                 <label>
                     <input autocomplete="off" class="layui-input" name="clusterName" placeholder="" type="text">
                 </label>
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label" style="width: 15%">Bootstrap Servers</label>
-            <div class="layui-input-block" style="margin-left: 20%;margin-right: 15%">
+            <label class="layui-form-label" style="width: 20%">Bootstrap Servers</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
                 <label>
                     <input autocomplete="off" class="layui-input" name="bootstrapServers" placeholder="" type="text">
                 </label>
@@ -133,39 +171,37 @@
 <div id="add-monitor-div" style="display: none">
     <form class="layui-form" lay-filter="add-monitor-filter" style="padding-top: 5%">
         <div class="layui-form-item">
-            <label class="layui-form-label">集群名</label>
-            <div class="layui-input-block" style="margin-left: 15%;margin-right: 15%">
+            <label class="layui-form-label" style="width: 20%">消费者</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
                 <label>
-                    <select id="cluster-name-select" lay-filter="cluster-name-select" lay-search name="clusterName">
-                        <option value="">选择集群</option>
-                    </select>
-                </label>
-            </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">消费者</label>
-            <div class="layui-input-block" style="margin-left: 15%;margin-right: 15%">
-                <label>
-                    <select id="consumer-select" lay-filter="consumer-select" lay-search name="consumer">
+                    <select id="add-monitor-consumer-select" lay-search name="consumer">
                         <option value="">选择消费者</option>
                     </select>
                 </label>
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label">Topic</label>
-            <div class="layui-input-block" style="margin-left: 15%;margin-right: 15%">
+            <label class="layui-form-label" style="width: 20%">Topic</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
                 <label>
-                    <select id="topic-select" lay-filter="topic-select" lay-search name="topic">
+                    <select id="add-monitor-topic-select" lay-search name="topic">
                         <option value="">选择Topic</option>
                     </select>
                 </label>
             </div>
         </div>
         <div class="layui-form-item">
+            <label class="layui-form-label" style="width: 20%">时间间隔(秒)</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
+                <label>
+                    <input autocomplete="off" class="layui-input" name="interval" placeholder="时间间隔" type="number">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
             <div class="layui-input-block" style="float: right; margin-right: 15%; margin-top: 5%;">
                 <button class="layui-btn layui-btn-primary" type="reset">重置</button>
-                <button class="layui-btn layui-btn-normal" lay-filter="addMonitorFilter" lay-submit>确 定</button>
+                <button class="layui-btn layui-btn-normal" lay-filter="add-monitor-filter" lay-submit>确 定</button>
             </div>
         </div>
     </form>

@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.grimmjow.kafkatool.domain.KafkaNode;
 import com.grimmjow.kafkatool.domain.KafkaTopic;
 import com.grimmjow.kafkatool.domain.KafkaTopicPartition;
+import com.grimmjow.kafkatool.entity.Cluster;
 import com.grimmjow.kafkatool.exception.KafkaClientException;
 import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
 import lombok.extern.slf4j.Slf4j;
@@ -37,14 +38,17 @@ public class KafkaClient {
 
     private TimeUnit timeoutUnit;
 
-    public KafkaClient(AdminClient adminClient, long timeout, TimeUnit timeoutUnit) {
+    private Cluster cluster;
+
+    public KafkaClient(AdminClient adminClient, Cluster cluster, long timeout, TimeUnit timeoutUnit) {
         this.adminClient = adminClient;
         this.timeout = timeout;
         this.timeoutUnit = timeoutUnit;
+        this.cluster = cluster;
     }
 
-    public KafkaClient(AdminClient adminClient) {
-        this(adminClient, DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
+    public KafkaClient(AdminClient adminClient, Cluster cluster) {
+        this(adminClient, cluster, DEFAULT_TIME_OUT, DEFAULT_TIME_UNIT);
     }
 
     public void close() {
@@ -171,6 +175,7 @@ public class KafkaClient {
         topicOffsetAndMetadataMap.forEach((topicPartition, offsetAndMetadata) -> {
             topicPartitionOffsets.put(topicPartition, OffsetSpec.latest());
             consumerTopicOffsetMap.put(topicPartition, ConsumerTopicOffsetVo.builder()
+                    .clusterName(this.cluster.getClusterName())
                     .consumer(consumerName)
                     .partition(topicPartition.partition())
                     .topic(topicPartition.topic())

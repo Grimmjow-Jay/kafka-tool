@@ -5,6 +5,7 @@ import com.grimmjow.kafkatool.component.KafkaClientPool;
 import com.grimmjow.kafkatool.component.MonitorTaskPool;
 import com.grimmjow.kafkatool.domain.request.MonitorDataRequest;
 import com.grimmjow.kafkatool.domain.request.MonitorTaskRequest;
+import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.mapper.ConsumerTopicOffsetMapper;
 import com.grimmjow.kafkatool.service.MonitorService;
 import com.grimmjow.kafkatool.task.MonitorTask;
@@ -38,6 +39,7 @@ public class MonitorServiceImpl implements MonitorService {
 
     @Override
     public void enableMonitor(MonitorTaskRequest monitorTaskRequest) {
+        BaseException.assertCondition(monitorTaskPool.taskExist(monitorTaskRequest), "该监控已存在.");
         monitorTaskPool.addTask(new MonitorTask(monitorTaskRequest, kafkaClientPool, consumerTopicOffsetMapper));
     }
 
@@ -50,31 +52,35 @@ public class MonitorServiceImpl implements MonitorService {
     public List<ConsumerTopicOffsetVo> offsetData(MonitorDataRequest monitorDataRequest) {
         List<ConsumerTopicOffsetVo> consumerTopicOffsetVoList;
 
+        long startTime = monitorDataRequest.getStartTime().getTime();
+        long endTime = monitorDataRequest.getEndTime().getTime();
+        long interval = monitorDataRequest.getInterval() * 1000L;
+
         if (monitorDataRequest.getPartition() == null) {
             consumerTopicOffsetVoList = consumerTopicOffsetMapper.listByIntervalIgnorePartition(
-                    monitorDataRequest.getStartTime(),
-                    monitorDataRequest.getEndTime(),
+                    startTime,
+                    endTime,
                     monitorDataRequest.getClusterName(),
                     monitorDataRequest.getConsumer(),
                     monitorDataRequest.getTopic(),
-                    monitorDataRequest.getInterval());
+                    interval);
         } else {
             consumerTopicOffsetVoList = consumerTopicOffsetMapper.listByInterval(
-                    monitorDataRequest.getStartTime(),
-                    monitorDataRequest.getEndTime(),
+                    startTime,
+                    endTime,
                     monitorDataRequest.getClusterName(),
                     monitorDataRequest.getConsumer(),
                     monitorDataRequest.getTopic(),
-                    monitorDataRequest.getInterval(),
+                    interval,
                     monitorDataRequest.getPartition());
         }
 
         consumerTopicOffsetVoList.forEach(ConsumerTopicOffsetVo::updateLag);
 
-        return fillInterstice(consumerTopicOffsetVoList);
+        return fillInterstice(consumerTopicOffsetVoList, interval);
     }
 
-    private List<ConsumerTopicOffsetVo> fillInterstice(List<ConsumerTopicOffsetVo> consumerTopicOffsetVoList) {
+    private List<ConsumerTopicOffsetVo> fillInterstice(List<ConsumerTopicOffsetVo> consumerTopicOffsetVoList, long interval) {
         List<ConsumerTopicOffsetVo> filledVoList = Lists.newArrayList();
         if (consumerTopicOffsetVoList.isEmpty()) {
             return filledVoList;
@@ -87,7 +93,7 @@ public class MonitorServiceImpl implements MonitorService {
         ConsumerTopicOffsetVo before = first;
         while (iterator.hasNext()) {
             ConsumerTopicOffsetVo next = iterator.next();
-            while (next.getTimestamp() > ++timestamp) {
+            while (next.getTimestamp() > (timestamp += interval)) {
                 ConsumerTopicOffsetVo consumerTopicOffsetVo = ConsumerTopicOffsetVo.builder()
                         .clusterName(before.getClusterName())
                         .consumer(before.getConsumer())

@@ -1,9 +1,11 @@
 package com.grimmjow.kafkatool.domain.request;
 
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @author Grimm
@@ -36,7 +38,7 @@ public class MonitorDataRequest {
     private Integer partition;
 
     /**
-     * 时间间隔（毫秒）
+     * 时间间隔（秒）
      */
     @NotNull(message = "间隔时间不能为空")
     private Long interval;
@@ -45,12 +47,14 @@ public class MonitorDataRequest {
      * 最小时间
      */
     @NotNull(message = "最小时间非法")
-    private Long startTime;
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date startTime;
 
     /**
      * 最大时间
      */
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NotNull(message = "最大时间非法")
-    private Long endTime;
+    private Date endTime;
 
 }

@@ -30,7 +30,8 @@ public class MonitorTaskPool {
      * @param monitorTask 监控任务
      */
     public void addTask(MonitorTask monitorTask) {
-        ScheduledFuture<?> scheduledFuture = taskScheduler.scheduleAtFixedRate(monitorTask, monitorTask.getInterval());
+        long period = monitorTask.getInterval() * 1000L;
+        ScheduledFuture<?> scheduledFuture = taskScheduler.scheduleAtFixedRate(monitorTask, period);
         pool.put(monitorTask.getMonitorTaskRequest(), scheduledFuture);
     }
 
@@ -45,5 +46,15 @@ public class MonitorTaskPool {
             scheduledFuture.cancel(true);
             pool.remove(monitorTaskRequest);
         }
+    }
+
+    /**
+     * 任务是否存在
+     *
+     * @param monitorTaskRequest 监控请求信息
+     * @return 任务是否存在
+     */
+    public boolean taskExist(MonitorTaskRequest monitorTaskRequest) {
+        return pool.containsKey(monitorTaskRequest);
     }
 }

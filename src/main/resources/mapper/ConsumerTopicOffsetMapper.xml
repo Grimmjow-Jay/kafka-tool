@@ -4,8 +4,9 @@
 
     <insert id="save">
         INSERT INTO `consumer_topic_offset`
-        (`consumer`, `topic`, `partition`, `offset`, `log_size`, `lag`, `timestamp`)
-        VALUES (#{consumerTopicOffset.consumer},
+        (`cluster_name`, `consumer`, `topic`, `partition`, `offset`, `log_size`, `lag`, `timestamp`)
+        VALUES (#{consumerTopicOffset.clusterName},
+                #{consumerTopicOffset.consumer},
                 #{consumerTopicOffset.topic},
                 #{consumerTopicOffset.partition},
                 #{consumerTopicOffset.offset},
@@ -16,10 +17,11 @@
 
     <insert id="saveList">
         INSERT INTO `consumer_topic_offset`
-        (`consumer`, `topic`, `partition`, `offset`, `log_size`, `lag`, `timestamp`)
+        (`cluster_name`, `consumer`, `topic`, `partition`, `offset`, `log_size`, `lag`, `timestamp`)
         VALUES
         <foreach collection="consumerTopicOffsetList" item="consumerTopicOffset" separator=",">
-            (#{consumerTopicOffset.consumer},
+            (#{consumerTopicOffset.clusterName},
+            #{consumerTopicOffset.consumer},
             #{consumerTopicOffset.topic},
             #{consumerTopicOffset.partition},
             #{consumerTopicOffset.offset},
@@ -47,13 +49,13 @@
     </select>
 
     <select id="listByInterval" resultType="com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo">
-        SELECT #{clusterName}              AS `cluster_name`,
-               #{consumer}                 AS `consumer`,
-               #{topic}                    AS `topic`,
-               #{partition}                AS `partition`,
-               MAX(`offset`)               AS `offset`,
-               MAX(`log_size`)             AS `log_size`,
-               (`timestamp` / #{interval}) AS `timestamp`
+        SELECT #{clusterName}                            AS `cluster_name`,
+               #{consumer}                               AS `consumer`,
+               #{topic}                                  AS `topic`,
+               #{partition}                              AS `partition`,
+               MAX(`offset`)                             AS `offset`,
+               MAX(`log_size`)                           AS `log_size`,
+               (`timestamp` / #{interval}) * #{interval} AS `timestamp`
         FROM `consumer_topic_offset`
         WHERE `timestamp` &gt;= #{startTime}
           AND `timestamp` &lt;= #{endTime}
@@ -72,9 +74,9 @@
                SUM(t.`log_size`) AS `log_size`,
                t.`timestamp`     AS `timestamp`
         FROM (
-                 SELECT MAX(`offset`)               AS `offset`,
-                        MAX(`log_size`)             AS `log_size`,
-                        (`timestamp` / #{interval}) AS `timestamp`
+                 SELECT MAX(`offset`)                             AS `offset`,
+                        MAX(`log_size`)                           AS `log_size`,
+                        (`timestamp` / #{interval}) * #{interval} AS `timestamp`
                  FROM `consumer_topic_offset`
                  WHERE `timestamp` &gt;= #{startTime}
                    AND `timestamp` &lt;= #{endTime}

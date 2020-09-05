@@ -3,6 +3,7 @@ package com.grimmjow.kafkatool.domain.request;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -33,9 +34,11 @@ public class MonitorTaskRequest {
     private String topic;
 
     /**
-     * 监控时间间隔（毫秒）
+     * 监控时间间隔（秒）
      */
     @NotNull(message = "间隔时间不能为空")
+    @Min(value = 1, message = "间隔时间有误")
+    @EqualsAndHashCode.Exclude
     private Long interval;
 
 }

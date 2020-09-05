@@ -34,7 +34,7 @@ public class KafkaClientPool {
     public KafkaClient connect(Cluster cluster) {
         Properties props = new Properties();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, cluster.getBootstrapServers());
-        return new KafkaClient(KafkaAdminClient.create(props));
+        return new KafkaClient(KafkaAdminClient.create(props), cluster);
     }
 
     /**

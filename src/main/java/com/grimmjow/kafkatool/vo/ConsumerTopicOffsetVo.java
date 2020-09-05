@@ -1,12 +1,15 @@
 package com.grimmjow.kafkatool.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author Grimm
@@ -60,8 +63,16 @@ public class ConsumerTopicOffsetVo implements Serializable {
      */
     private Long timestamp;
 
+    /**
+     * 时间戳对应的时间
+     */
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date date;
+
     public static ConsumerTopicOffset convert(ConsumerTopicOffsetVo consumerTopicOffsetVo) {
         return ConsumerTopicOffset.builder()
+                .clusterName(consumerTopicOffsetVo.getClusterName())
                 .consumer(consumerTopicOffsetVo.getConsumer())
                 .topic(consumerTopicOffsetVo.getTopic())
                 .partition(consumerTopicOffsetVo.getPartition())
@@ -70,6 +81,10 @@ public class ConsumerTopicOffsetVo implements Serializable {
                 .lag(consumerTopicOffsetVo.getLag())
                 .timestamp(System.currentTimeMillis())
                 .build();
+    }
+
+    public Date getDate() {
+        return timestamp == null ? null : new Date(timestamp);
     }
 
     public void updateLag() {
