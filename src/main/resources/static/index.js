@@ -4,7 +4,6 @@
     const $ = layui.$;
     const table = layui.table;
     const form = layui.form;
-    form.render();
     let layerShade;
 
     let currentCluster;
@@ -16,7 +15,8 @@
         getTopicDetail: '/topic/detail/{clusterName}/{topic}',
         getConsumers: '/consumer/consumers/{clusterName}',
         getConsumerOffsets: '/consumer/offsets/{clusterName}/{consumerName}',
-        addCluster: '/cluster'
+        addCluster: '/cluster',
+        addMonitor: '/monitor/enable'
     };
 
     const tableCol = {
@@ -42,6 +42,8 @@
 
     initAddClusterBtn();
 
+    initAddMonitorBtn();
+
     showMonitorChart();
 
     function updateCluster() {
@@ -61,7 +63,8 @@
     }
 
     function addCluster(dom, index) {
-        form.on('submit(addClusterFilter)', function (parameters) {
+        form.render(null, 'add-cluster-filter');
+        form.on('submit(add-cluster-filter)', function (parameters) {
             const data = parameters.field;
             const url = urls.addCluster;
             ajaxPost(url, JSON.stringify(data), function () {
@@ -70,6 +73,81 @@
                 layer.close(index);
             });
             return false;
+        });
+    }
+
+    function initAddMonitorBtn() {
+        form.render();
+        $('#add-monitor-btn').on('click', function () {
+            layer.open({
+                type: 1,
+                title: "添加监控",
+                area: ["800px", "600px"],
+                content: $('#add-monitor-div').html(),
+                success: addMonitor
+            });
+        });
+    }
+
+    function addMonitor(dom, index) {
+        form.render(null, 'add-monitor-filter');
+        ajaxGet(urls.getCluster, showClusterNameSelect);
+
+        form.on('submit(addMonitorFilter)', function (parameters) {
+            const data = parameters.field;
+            console.log(data);
+            layer.close(index);
+            // const url = urls.addMonitor;
+            // ajaxPost(url, JSON.stringify(data), function () {
+            //     layer.msg('添加成功');
+            //     layer.close(index);
+            // });
+            return false;
+        });
+    }
+
+    function showClusterNameSelect(clusterList) {
+        let clusterNameSelectHtml = '';
+        clusterNameSelectHtml += '<option value="选择集群"></option>';
+        for (let i = 0; i < clusterList.length; i++) {
+            let clusterName = clusterList[i]["clusterName"];
+            clusterNameSelectHtml += '<option value="' + clusterName + '">' + clusterName + '</option>';
+        }
+
+        $("#cluster-name-select").html(clusterNameSelectHtml);
+        form.render();
+
+        form.on('select(cluster-name-select)', function (elem) {
+            if (elem && elem.value) {
+                showConsumerSelect(elem.value);
+                showTopicSelect(elem.value);
+            }
+        });
+    }
+
+    function showConsumerSelect(clusterName) {
+        const getConsumersUrl = urls.getConsumers.replace(/{clusterName}/, clusterName);
+        ajaxGet(getConsumersUrl, function (consumerList) {
+            let consumerSelectHtml = '';
+            consumerSelectHtml += '<option value="选择消费者"></option>';
+            for (let i = 0; i < consumerList.length; i++) {
+                consumerSelectHtml += '<option value="' + consumerList[i] + '">' + consumerList[i] + '</option>';
+            }
+            $("#consumer-select").html(consumerSelectHtml);
+            form.render();
+        });
+    }
+
+    function showTopicSelect(clusterName) {
+        const getTopicsUrl = urls.getTopics.replace(/{clusterName}/, clusterName);
+        ajaxGet(getTopicsUrl, function (topicList) {
+            let topicSelectHtml = '';
+            topicSelectHtml += '<option value="选择Topic"></option>';
+            for (let i = 0; i < topicList.length; i++) {
+                topicSelectHtml += '<option value="' + topicList[i] + '">' + topicList[i] + '</option>';
+            }
+            $("#topic-select").html(topicSelectHtml);
+            form.render();
         });
     }
 

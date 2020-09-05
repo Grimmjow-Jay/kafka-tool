@@ -13,6 +13,7 @@
     </div>
     <div style="float: right">
         <button class="layui-btn" id="add-cluster-btn" type="button">添加集群</button>
+        <button class="layui-btn" id="add-monitor-btn" type="button">添加监控</button>
     </div>
 </div>
 <br/>
@@ -124,7 +125,47 @@
         <div class="layui-form-item">
             <div class="layui-input-block" style="float: right; margin-right: 15%; margin-top: 5%;">
                 <button class="layui-btn layui-btn-primary" type="reset">重置</button>
-                <button class="layui-btn layui-btn-normal" lay-filter="addClusterFilter" lay-submit>确 定</button>
+                <button class="layui-btn layui-btn-normal" lay-filter="add-cluster-filter" lay-submit>确 定</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="add-monitor-div" style="display: none">
+    <form class="layui-form" lay-filter="add-monitor-filter" style="padding-top: 5%">
+        <div class="layui-form-item">
+            <label class="layui-form-label">集群名</label>
+            <div class="layui-input-block" style="margin-left: 15%;margin-right: 15%">
+                <label>
+                    <select id="cluster-name-select" lay-filter="cluster-name-select" lay-search name="clusterName">
+                        <option value="">选择集群</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">消费者</label>
+            <div class="layui-input-block" style="margin-left: 15%;margin-right: 15%">
+                <label>
+                    <select id="consumer-select" lay-filter="consumer-select" lay-search name="consumer">
+                        <option value="">选择消费者</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">Topic</label>
+            <div class="layui-input-block" style="margin-left: 15%;margin-right: 15%">
+                <label>
+                    <select id="topic-select" lay-filter="topic-select" lay-search name="topic">
+                        <option value="">选择Topic</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block" style="float: right; margin-right: 15%; margin-top: 5%;">
+                <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+                <button class="layui-btn layui-btn-normal" lay-filter="addMonitorFilter" lay-submit>确 定</button>
             </div>
         </div>
     </form>
