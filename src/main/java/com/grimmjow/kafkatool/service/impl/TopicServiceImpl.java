@@ -2,14 +2,24 @@ package com.grimmjow.kafkatool.service.impl;
 
 import com.grimmjow.kafkatool.component.KafkaClientPool;
 import com.grimmjow.kafkatool.domain.KafkaTopic;
+import com.grimmjow.kafkatool.domain.KafkaTopicPartition;
 import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
+import com.grimmjow.kafkatool.domain.request.FetchDataRequest;
+import com.grimmjow.kafkatool.entity.Cluster;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.exception.KafkaClientException;
+import com.grimmjow.kafkatool.mapper.ClusterMapper;
 import com.grimmjow.kafkatool.service.TopicService;
+import com.grimmjow.kafkatool.vo.KafkaData;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author Grimm
@@ -21,8 +31,11 @@ public class TopicServiceImpl implements TopicService {
 
     private final KafkaClientPool kafkaClientPool;
 
-    public TopicServiceImpl(KafkaClientPool kafkaClientPool) {
+    private final ClusterMapper clusterMapper;
+
+    public TopicServiceImpl(KafkaClientPool kafkaClientPool, ClusterMapper clusterMapper) {
         this.kafkaClientPool = kafkaClientPool;
+        this.clusterMapper = clusterMapper;
     }
 
     @Override
@@ -54,5 +67,39 @@ public class TopicServiceImpl implements TopicService {
             log.error("创建Topic异常", e);
             throw new BaseException("创建Topic异常");
         }
+    }
+
+    @Override
+    public List<KafkaData> fetchMessageData(String clusterName, String topic, FetchDataRequest fetchDataRequest) {
+        Cluster cluster = clusterMapper.getByName(clusterName);
+        BaseException.assertNull(cluster, "集群不存在");
+
+        KafkaTopic detail = detail(clusterName, topic);
+        List<KafkaTopicPartition> partitionList = detail.getPartitions();
+        BaseException.assertEmpty(partitionList, "该Topic没有分区信息");
+
+        Collection<TopicPartition> assignPartitions;
+        if (fetchDataRequest.getPartition() == null) {
+            assignPartitions = partitionList.stream()
+                    .map(e -> new TopicPartition(topic, e.getPartition()))
+                    .collect(Collectors.toList());
+        } else {
+            assignPartitions = partitionList.stream()
+                    .filter(e -> e.getPartition() == fetchDataRequest.getPartition())
+                    .map(e -> new TopicPartition(topic, e.getPartition()))
+                    .collect(Collectors.toList());
+        }
+        BaseException.assertEmpty(assignPartitions, "分区数据有误");
+
+        Properties props = new Properties();
+        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, cluster.getBootstrapServers());
+        props.put("enable.auto.commit", "false");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+
+        consumer.assign(assignPartitions);
+
+        return null;
     }
 }

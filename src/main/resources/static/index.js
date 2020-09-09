@@ -1,14 +1,12 @@
 ;!function () {
     const element = layui.element;
     const layer = layui.layer;
-    const laydate = layui.laydate;
     const $ = layui.$;
     const table = layui.table;
     const form = layui.form;
+
     let layerShade;
-
     let currentCluster;
-
     let monitorChart;
 
     const urls = {
@@ -28,22 +26,6 @@
     };
 
     const tableCol = {
-        consumer: [[
-            {field: 'topic', title: 'topic'},
-            {field: 'consumer', title: 'consumer'},
-            {field: 'partition', title: 'partition'},
-            {field: 'offset', title: 'offset'},
-            {field: 'logSize', title: 'logSize'},
-            {field: 'lag', title: 'lag'},
-            {field: 'lastCommit', title: 'last commit'}
-        ]],
-        topic: [[
-            {field: 'topic', title: 'topic'},
-            {field: 'partition', title: 'partition'},
-            {field: 'offset', title: 'offset'},
-            {field: 'replicas', title: 'replicas'},
-            {field: 'leader', title: 'leader'}
-        ]],
         monitorTask: [[
             {field: 'consumer', title: '消费者'},
             {field: 'topic', title: 'Topic'},
@@ -53,18 +35,13 @@
     };
 
     updateCluster();
-
     initAddClusterBtn();
-
     initAddMonitorBtn();
-
     initShowMonitorChart();
-
     initManageMonitorSelectBtn();
 
     form.render();
-
-    laydate.render({
+    layui.laydate.render({
         elem: '#show-monitor-time-range',
         type: 'datetime',
         range: true
@@ -352,24 +329,39 @@
             const subtext = 'Topic: ' + requestData['topic'] + '   Consumer: ' + requestData['consumer'];
 
             let xAxisData = [];
-            let offsetMax = 1;
-            let offsetMin = 0;
-            let lagMax = 1;
-            let lagMin = 0;
+            let offsetMax = null;
+            let offsetMin = null;
+            let lagMax = null;
+            let lagMin = null;
             const offsetSeriesData = [];
             const logSizeSeriesData = [];
             const lagSeriesData = [];
             for (let i = 0; i < monitorDataList.length; i++) {
                 let monitorData = monitorDataList[i];
                 xAxisData.push(monitorData['date']);
-                offsetMax = Math.max(offsetMax, monitorData['offset'], monitorData['logSize']);
-                offsetMin = Math.min(offsetMax, monitorData['offset'], monitorData['logSize']);
-                lagMax = Math.max(lagMax, monitorData['lag']);
-                lagMin = Math.min(lagMax, monitorData['lag']);
-                offsetSeriesData.push(monitorData['offset']);
-                logSizeSeriesData.push(monitorData['logSize']);
-                lagSeriesData.push(monitorData['lag']);
+                const offset = monitorData['offset'];
+                const logSize = monitorData['logSize'];
+                const lag = monitorData['lag'];
+                offsetMax = offsetMax === null ? Math.max(offset, logSize) : Math.max(offsetMax, offset, logSize);
+                offsetMin = offsetMin == null ? Math.min(offset, logSize) : Math.min(offsetMin, offset, logSize);
+                lagMax = lagMax == null ? lag : Math.max(lagMax, lag);
+                lagMin = lagMin == null ? lag : Math.min(lagMin, lag);
+                offsetSeriesData.push(offset);
+                logSizeSeriesData.push(logSize);
+                lagSeriesData.push(lag);
             }
+            offsetMax = offsetMax == null ? 1 : offsetMax;
+            offsetMin = offsetMin == null ? 0 : offsetMin;
+            lagMax = lagMax == null ? 1 : lagMax;
+            lagMin = lagMin == null ? 0 : lagMin;
+
+            let offsetDiff = offsetMax - offsetMin;
+            let lagDiff = lagMax - lagMin;
+
+            offsetMax = Math.ceil(offsetDiff * 0.1 + offsetMax);
+            offsetMin = Math.max(Math.floor(offsetMin - offsetDiff * 0.1), 0);
+            lagMax = Math.ceil(lagDiff * 0.1 + lagMax);
+            lagMin = Math.max(Math.floor(lagMin - lagDiff * 0.1), 0);
 
             const chartOption = {
                 title: {
@@ -402,12 +394,26 @@
                 },
                 dataZoom: [
                     {
-                        show: true,
-                        realtime: true
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        filterMode: 'filter'
+                    },
+                    {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        filterMode: 'filter',
+                        left: '3%'
+                    },
+                    {
+                        type: 'slider',
+                        yAxisIndex: 1,
+                        filterMode: 'filter',
+                        right: '3%'
                     },
                     {
                         type: 'inside',
-                        realtime: true
+                        xAxisIndex: 0,
+                        filterMode: 'filter'
                     }
                 ],
                 xAxis: [
@@ -478,6 +484,7 @@
                     }
                 ]
             };
+            monitorChart.clear();
             monitorChart.setOption(chartOption);
         });
     }
@@ -571,7 +578,11 @@
                 layer.close(layerShade);
             },
             error: function (XMLHttpRequest, errorMsg, error) {
-                errorCallback(errorMsg, error);
+                if (errorCallback) {
+                    errorCallback(errorMsg, error);
+                } else {
+                    showErrorInfo(errorMsg);
+                }
             }
         });
     }
@@ -595,7 +606,11 @@
                 layer.close(layerShade);
             },
             error: function (XMLHttpRequest, errorMsg, error) {
-                errorCallback(errorMsg, error);
+                if (errorCallback) {
+                    errorCallback(errorMsg, error);
+                } else {
+                    showErrorInfo(errorMsg);
+                }
             }
         });
     }
@@ -619,7 +634,11 @@
                 layer.close(layerShade);
             },
             error: function (XMLHttpRequest, errorMsg, error) {
-                errorCallback(errorMsg, error);
+                if (errorCallback) {
+                    errorCallback(errorMsg, error);
+                } else {
+                    showErrorInfo(errorMsg);
+                }
             }
         });
     }
@@ -641,7 +660,11 @@
                 layer.close(layerShade);
             },
             error: function (XMLHttpRequest, errorMsg, error) {
-                errorCallback(errorMsg, error);
+                if (errorCallback) {
+                    errorCallback(errorMsg, error);
+                } else {
+                    showErrorInfo(errorMsg);
+                }
             }
         });
     }
