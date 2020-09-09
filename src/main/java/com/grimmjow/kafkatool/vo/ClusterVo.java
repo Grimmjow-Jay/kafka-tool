@@ -23,6 +23,9 @@ public class ClusterVo {
     private String bootstrapServers;
 
     public static ClusterVo convert(Cluster cluster) {
+        if (cluster == null) {
+            return null;
+        }
         return ClusterVo.builder()
                 .id(cluster.getId())
                 .clusterName(cluster.getClusterName())

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.grimmjow.kafkatool.mapper.MonitorTaskMapper">
+
+    <insert id="save">
+        INSERT INTO `monitor_task` (`cluster_name`, `consumer`, `topic`, `interval`, `is_active`)
+        VALUES (#{monitorTask.clusterName},
+                #{monitorTask.consumer},
+                #{monitorTask.topic},
+                #{monitorTask.interval},
+                #{monitorTask.isActive})
+    </insert>
+
+    <update id="activeMonitor">
+        UPDATE `monitor_task`
+        SET `is_active` = TRUE
+        WHERE `id` = #{id}
+    </update>
+
+    <update id="disableMonitor">
+        UPDATE `monitor_task`
+        SET `is_active` = FALSE
+        WHERE `id` = #{id}
+    </update>
+
+    <delete id="remove">
+        DELETE
+        FROM `monitor_task`
+        WHERE `cluster_name` = #{monitorTask.clusterName}
+          AND `consumer` = #{monitorTask.consumer}
+          AND `topic` = #{monitorTask.topic}
+    </delete>
+
+    <select id="list" resultType="com.grimmjow.kafkatool.entity.MonitorTask">
+        SELECT `id`, `cluster_name`, `consumer`, `topic`, `interval`, `is_active`
+        FROM `monitor_task`
+        <where>
+            <if test="clusterName != null and clusterName != ''">
+                `cluster_name` = #{clusterName}
+            </if>
+            <if test="consumer != null and consumer != ''">
+                AND `consumer` = #{consumer}
+            </if>
+            <if test="topic != null and topic != ''">
+                AND `topic` = #{topic}
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" resultType="com.grimmjow.kafkatool.entity.MonitorTask">
+        SELECT `id`, `cluster_name`, `consumer`, `topic`, `interval`, `is_active`
+        FROM `monitor_task`
+        WHERE `id` = #{id}
+    </select>
+
+</mapper>

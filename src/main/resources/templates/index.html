@@ -22,6 +22,7 @@
         <li>Consumers</li>
         <li>Brokers</li>
         <li>Offset监控</li>
+        <li>监控管理</li>
     </ul>
     <div class="layui-tab-content">
 
@@ -133,12 +134,43 @@
                     <div class="layui-input-inline" style="width: 80px; margin-right: 0">
                         <button class="layui-btn layui-btn-normal" lay-filter="show-monitor" lay-submit>确 定</button>
                     </div>
+                </div>
+            </form>
+            <div id="monitor-chart" style="width: 1400px;height:600px;"></div>
+        </div>
+
+        <!--    监控管理    -->
+        <div class="layui-tab-item">
+            <form class="layui-form">
+                <div class="layui-form-item">
+                    <label class="layui-form-label" style="width: 50px">消费者</label>
+                    <div class="layui-input-inline">
+                        <label>
+                            <select id="manage-monitor-consumer-select" lay-search name="consumer">
+                                <option value="">选择消费者</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label class="layui-form-label" style="width: 40px">Topic</label>
+                    <div class="layui-input-inline">
+                        <label>
+                            <select id="manage-monitor-topic-select" lay-search name="topic">
+                                <option value="">选择Topic</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="layui-input-inline" style="width: 80px; margin-right: 0">
+                        <button class="layui-btn layui-btn-normal" lay-filter="manage-monitor-select" lay-submit>搜 索
+                        </button>
+                    </div>
                     <div style="float: right">
                         <button class="layui-btn" id="add-monitor-btn" type="button">添加监控</button>
                     </div>
                 </div>
             </form>
-            <div id="monitor-chart" style="width: 1400px;height:600px;"></div>
+            <div>
+                <table id="monitor-task-table"></table>
+            </div>
         </div>
     </div>
 </div>

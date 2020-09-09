@@ -54,4 +54,5 @@ public class ClusterRestController {
         clusterService.reconnect(clusterName);
         return ResponseEntity.success();
     }
+
 }

@@ -1,21 +1,19 @@
 package com.grimmjow.kafkatool.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 
 /**
  * @author Grimm
- * @date 2020/8/30
+ * @date 2020/9/7
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ConsumerTopicOffset implements Serializable {
+@EqualsAndHashCode(of = {"clusterName", "consumer", "topic"})
+public class MonitorTask implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,28 +35,13 @@ public class ConsumerTopicOffset implements Serializable {
     private String topic;
 
     /**
-     * 分区
+     * 监控时间间隔
      */
-    private int partition;
+    private Long interval;
 
     /**
-     * offset
+     * 是否启用
      */
-    private long offset;
-
-    /**
-     * logSize
-     */
-    private long logSize;
-
-    /**
-     * lag
-     */
-    private long lag;
-
-    /**
-     * 时间戳
-     */
-    private long timestamp;
+    private Boolean isActive;
 
 }

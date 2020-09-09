@@ -2,8 +2,8 @@ package com.grimmjow.kafkatool.task;
 
 import com.google.common.collect.Lists;
 import com.grimmjow.kafkatool.component.KafkaClientPool;
-import com.grimmjow.kafkatool.domain.request.MonitorTaskRequest;
 import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
+import com.grimmjow.kafkatool.entity.MonitorTask;
 import com.grimmjow.kafkatool.exception.KafkaClientException;
 import com.grimmjow.kafkatool.mapper.ConsumerTopicOffsetMapper;
 import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
  * @date 2020/8/29
  */
 @Slf4j
-public class MonitorTask implements Runnable, MonitorTrigger {
+public class MonitorJob implements Runnable, MonitorTrigger {
 
     @Getter
-    private MonitorTaskRequest monitorTaskRequest;
+    private MonitorTask monitorTask;
 
     private KafkaClientPool kafkaClientPool;
 
@@ -34,8 +34,8 @@ public class MonitorTask implements Runnable, MonitorTrigger {
     @Setter
     private int partitionSize = 20;
 
-    public MonitorTask(MonitorTaskRequest monitorTaskRequest, KafkaClientPool kafkaClientPool, ConsumerTopicOffsetMapper consumerTopicOffsetMapper) {
-        this.monitorTaskRequest = monitorTaskRequest;
+    public MonitorJob(MonitorTask monitorTask, KafkaClientPool kafkaClientPool, ConsumerTopicOffsetMapper consumerTopicOffsetMapper) {
+        this.monitorTask = monitorTask;
         this.kafkaClientPool = kafkaClientPool;
         this.consumerTopicOffsetMapper = consumerTopicOffsetMapper;
         this.running = new AtomicBoolean(false);
@@ -43,7 +43,7 @@ public class MonitorTask implements Runnable, MonitorTrigger {
 
     @Override
     public long getInterval() {
-        return monitorTaskRequest.getInterval();
+        return monitorTask.getInterval();
     }
 
     @Override
@@ -52,11 +52,18 @@ public class MonitorTask implements Runnable, MonitorTrigger {
         if (!canRun) {
             return;
         }
+        String logMsg = String.format(
+                "执行监控任务[集群：%s，消费者：%s，Topic：%s]",
+                monitorTask.getClusterName(),
+                monitorTask.getConsumer(),
+                monitorTask.getTopic());
         try {
+            log.info("开始" + logMsg);
             List<ConsumerTopicOffsetVo> consumerTopicOffsetVo = consumerTopicOffset();
             saveOffset(consumerTopicOffsetVo);
+            log.info(logMsg + "结束.");
         } catch (KafkaClientException e) {
-            log.error(e.getMessage(), e);
+            log.error(logMsg + "失败，" + e.getMessage(), e);
         } finally {
             running.set(false);
         }
@@ -66,8 +73,8 @@ public class MonitorTask implements Runnable, MonitorTrigger {
      * 查询监控数据
      */
     private List<ConsumerTopicOffsetVo> consumerTopicOffset() throws KafkaClientException {
-        return kafkaClientPool.getClient(monitorTaskRequest.getClusterName())
-                .offsets(monitorTaskRequest.getConsumer(), monitorTaskRequest.getTopic());
+        return kafkaClientPool.getClient(monitorTask.getClusterName())
+                .offsets(monitorTask.getConsumer(), monitorTask.getTopic());
     }
 
     /**

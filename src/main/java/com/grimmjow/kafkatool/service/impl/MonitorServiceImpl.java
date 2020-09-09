@@ -5,15 +5,20 @@ import com.grimmjow.kafkatool.component.KafkaClientPool;
 import com.grimmjow.kafkatool.component.MonitorTaskPool;
 import com.grimmjow.kafkatool.domain.request.MonitorDataRequest;
 import com.grimmjow.kafkatool.domain.request.MonitorTaskRequest;
+import com.grimmjow.kafkatool.entity.MonitorTask;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.mapper.ConsumerTopicOffsetMapper;
+import com.grimmjow.kafkatool.mapper.MonitorTaskMapper;
 import com.grimmjow.kafkatool.service.MonitorService;
-import com.grimmjow.kafkatool.task.MonitorTask;
+import com.grimmjow.kafkatool.task.MonitorJob;
 import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
+import com.grimmjow.kafkatool.vo.MonitorTaskVo;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Grimm
@@ -28,24 +33,36 @@ public class MonitorServiceImpl implements MonitorService {
 
     private final ConsumerTopicOffsetMapper consumerTopicOffsetMapper;
 
+    private final MonitorTaskMapper monitorTaskMapper;
 
     public MonitorServiceImpl(MonitorTaskPool monitorTaskPool,
                               KafkaClientPool kafkaClientPool,
-                              ConsumerTopicOffsetMapper consumerTopicOffsetMapper) {
+                              ConsumerTopicOffsetMapper consumerTopicOffsetMapper,
+                              MonitorTaskMapper monitorTaskMapper) {
         this.monitorTaskPool = monitorTaskPool;
         this.kafkaClientPool = kafkaClientPool;
         this.consumerTopicOffsetMapper = consumerTopicOffsetMapper;
+        this.monitorTaskMapper = monitorTaskMapper;
     }
 
     @Override
-    public void enableMonitor(MonitorTaskRequest monitorTaskRequest) {
-        BaseException.assertCondition(monitorTaskPool.taskExist(monitorTaskRequest), "该监控已存在.");
-        monitorTaskPool.addTask(new MonitorTask(monitorTaskRequest, kafkaClientPool, consumerTopicOffsetMapper));
+    public void addMonitor(MonitorTaskRequest monitorTaskRequest) {
+        MonitorTask monitorTask = monitorTaskRequest.convertToMonitorTask();
+        monitorTask.setIsActive(true);
+        try {
+            monitorTaskMapper.save(monitorTask);
+        } catch (DuplicateKeyException e) {
+            throw new BaseException("监控任务已存在");
+        }
+        monitorTaskPool.addTask(new MonitorJob(monitorTask, kafkaClientPool, consumerTopicOffsetMapper));
     }
 
     @Override
-    public void disableMonitor(MonitorTaskRequest monitorTaskRequest) {
-        monitorTaskPool.removeTask(monitorTaskRequest);
+    public void removeMonitor(Long id) {
+        MonitorTask monitorTask = monitorTaskMapper.findById(id);
+        BaseException.assertNull(monitorTask, "监控任务不存在");
+        monitorTaskMapper.remove(monitorTask);
+        monitorTaskPool.removeTask(monitorTask);
     }
 
     @Override
@@ -113,4 +130,34 @@ public class MonitorServiceImpl implements MonitorService {
 
         return filledVoList;
     }
+
+    @Override
+    public List<MonitorTaskVo> listMonitorTask(MonitorTaskRequest monitorTaskRequest) {
+        List<MonitorTask> monitorTaskList = monitorTaskMapper.list(monitorTaskRequest.getClusterName(),
+                monitorTaskRequest.getConsumer(), monitorTaskRequest.getTopic());
+        return monitorTaskList.stream()
+                .map(MonitorTaskVo::convertFromMonitorTask)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void activeMonitor(Long id) {
+        MonitorTask monitorTask = monitorTaskMapper.findById(id);
+        BaseException.assertNull(monitorTask, "监控任务ID无效");
+        BaseException.assertCondition(monitorTask.getIsActive(), "监控任务已经启用");
+
+        monitorTaskMapper.activeMonitor(id);
+        monitorTaskPool.addTask(new MonitorJob(monitorTask, kafkaClientPool, consumerTopicOffsetMapper));
+    }
+
+    @Override
+    public void disableMonitor(Long id) {
+        MonitorTask monitorTask = monitorTaskMapper.findById(id);
+        BaseException.assertNull(monitorTask, "监控任务ID无效");
+        BaseException.assertCondition(!monitorTask.getIsActive(), "监控任务已经禁用");
+
+        monitorTaskMapper.disableMonitor(id);
+        monitorTaskPool.removeTask(monitorTask);
+    }
+
 }

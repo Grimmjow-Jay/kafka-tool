@@ -31,6 +31,9 @@ public class KafkaNode implements Serializable {
     private String rack;
 
     public static KafkaNode convert(Node node) {
+        if (node == null) {
+            return null;
+        }
         return KafkaNode.builder()
                 .id(node.id())
                 .host(node.host())

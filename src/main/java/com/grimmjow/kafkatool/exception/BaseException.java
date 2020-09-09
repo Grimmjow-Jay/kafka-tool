@@ -25,9 +25,7 @@ public class BaseException extends RuntimeException {
     }
 
     public static void assertNull(Object obj, String message) {
-        if (obj == null) {
-            throw new BaseException(message);
-        }
+        assertCondition(obj == null, message);
     }
 
     public static void assertCondition(boolean condition, String message) {
@@ -50,14 +48,10 @@ public class BaseException extends RuntimeException {
     }
 
     public static void assertEmpty(Collection<?> collection, String message) {
-        if (collection == null || collection.isEmpty()) {
-            throw new BaseException(message);
-        }
+        assertCondition(collection == null || collection.isEmpty(), message);
     }
 
     public static void assertEmpty(Map<?, ?> map, String message) {
-        if (map == null || map.isEmpty()) {
-            throw new BaseException(message);
-        }
+        assertCondition(map == null || map.isEmpty(), message);
     }
 }

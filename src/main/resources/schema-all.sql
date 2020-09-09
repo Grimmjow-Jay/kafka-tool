@@ -24,5 +24,9 @@ CREATE TABLE IF NOT EXISTS `monitor_task`
     `cluster_name` VARCHAR(64) NOT NULL,
     `consumer`     VARCHAR(64) NOT NULL,
     `topic`        VARCHAR(64) NOT NULL,
-    `interval`     INTEGER     NOT NULL
+    `interval`     INTEGER     NOT NULL,
+    `is_active`    BOOLEAN     NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS `unique_monitor_task`
+    ON `monitor_task` (`cluster_name`, `consumer`, `topic`);

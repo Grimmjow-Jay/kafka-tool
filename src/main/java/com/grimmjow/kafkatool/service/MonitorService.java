@@ -3,6 +3,7 @@ package com.grimmjow.kafkatool.service;
 import com.grimmjow.kafkatool.domain.request.MonitorDataRequest;
 import com.grimmjow.kafkatool.domain.request.MonitorTaskRequest;
 import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
+import com.grimmjow.kafkatool.vo.MonitorTaskVo;
 
 import java.util.List;
 
@@ -13,18 +14,18 @@ import java.util.List;
 public interface MonitorService {
 
     /**
-     * 开启一个监控
+     * 添加一个监控
      *
      * @param monitorTaskRequest 监控请求参数
      */
-    void enableMonitor(MonitorTaskRequest monitorTaskRequest);
+    void addMonitor(MonitorTaskRequest monitorTaskRequest);
 
     /**
-     * 禁用一个监控
+     * 删除一个监控
      *
-     * @param monitorTaskRequest 监控请求参数
+     * @param id 监控任务ID
      */
-    void disableMonitor(MonitorTaskRequest monitorTaskRequest);
+    void removeMonitor(Long id);
 
     /**
      * 查询监控数据
@@ -33,5 +34,28 @@ public interface MonitorService {
      * @return 监控数据
      */
     List<ConsumerTopicOffsetVo> offsetData(MonitorDataRequest monitorDataRequest);
+
+    /**
+     * 查询监控任务列表
+     *
+     * @param monitorTaskRequest 查询条件参数
+     * @return 监控任务列表
+     */
+    List<MonitorTaskVo> listMonitorTask(MonitorTaskRequest monitorTaskRequest);
+
+    /**
+     * 激活监控任务
+     *
+     * @param id 监控任务ID
+     */
+    void activeMonitor(Long id);
+
+
+    /**
+     * 禁用监控任务
+     *
+     * @param id 监控任务ID
+     */
+    void disableMonitor(Long id);
 
 }

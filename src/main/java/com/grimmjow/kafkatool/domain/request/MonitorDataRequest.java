@@ -3,6 +3,7 @@ package com.grimmjow.kafkatool.domain.request;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
@@ -41,6 +42,7 @@ public class MonitorDataRequest {
      * 时间间隔（秒）
      */
     @NotNull(message = "间隔时间不能为空")
+    @Min(value = 1L, message = "间隔时间有误")
     private Long interval;
 
     /**

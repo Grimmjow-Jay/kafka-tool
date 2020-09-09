@@ -173,14 +173,16 @@ public class KafkaClient {
 
         Map<TopicPartition, OffsetSpec> topicPartitionOffsets = Maps.newHashMap();
         topicOffsetAndMetadataMap.forEach((topicPartition, offsetAndMetadata) -> {
-            topicPartitionOffsets.put(topicPartition, OffsetSpec.latest());
-            consumerTopicOffsetMap.put(topicPartition, ConsumerTopicOffsetVo.builder()
-                    .clusterName(this.cluster.getClusterName())
-                    .consumer(consumerName)
-                    .partition(topicPartition.partition())
-                    .topic(topicPartition.topic())
-                    .offset(offsetAndMetadata.offset())
-                    .build());
+            if (offsetAndMetadata != null) {
+                topicPartitionOffsets.put(topicPartition, OffsetSpec.latest());
+                consumerTopicOffsetMap.put(topicPartition, ConsumerTopicOffsetVo.builder()
+                        .clusterName(this.cluster.getClusterName())
+                        .consumer(consumerName)
+                        .partition(topicPartition.partition())
+                        .topic(topicPartition.topic())
+                        .offset(offsetAndMetadata.offset())
+                        .build());
+            }
         });
         KafkaFuture<Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo>> topicPartitionOffsetsInfo = adminClient
                 .listOffsets(topicPartitionOffsets).all();

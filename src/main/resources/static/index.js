@@ -19,12 +19,16 @@
         getConsumers: '/consumer/consumers/{clusterName}',
         getConsumerOffsets: '/consumer/offsets/{clusterName}/{consumerName}',
         addCluster: '/cluster',
-        addMonitor: '/monitor/enable',
-        getMonitorData: '/monitor/offset-data'
+        addMonitor: '/monitor/add',
+        removeMonitor: '/monitor/remove/{id}',
+        activeMonitor: '/monitor/active/{id}',
+        disableMonitor: '/monitor/disable/{id}',
+        getMonitorData: '/monitor/offset-data',
+        listMonitor: '/monitor/list'
     };
 
     const tableCol = {
-        consumers: [[
+        consumer: [[
             {field: 'topic', title: 'topic'},
             {field: 'consumer', title: 'consumer'},
             {field: 'partition', title: 'partition'},
@@ -39,6 +43,12 @@
             {field: 'offset', title: 'offset'},
             {field: 'replicas', title: 'replicas'},
             {field: 'leader', title: 'leader'}
+        ]],
+        monitorTask: [[
+            {field: 'consumer', title: '消费者'},
+            {field: 'topic', title: 'Topic'},
+            {field: 'interval', title: '时间间隔(秒)'},
+            {field: 'isActive', title: '操作', align: 'center', templet: showOperate}
         ]]
     };
 
@@ -49,6 +59,8 @@
     initAddMonitorBtn();
 
     initShowMonitorChart();
+
+    initManageMonitorSelectBtn();
 
     form.render();
 
@@ -171,6 +183,7 @@
         let $topicList = $("#topic-list");
         let $addMonitorTopicSelect = $("#add-monitor-topic-select");
         let $showMonitorTopicSelect = $("#show-monitor-topic-select");
+        let $manageMonitorTopicSelect = $("#manage-monitor-topic-select");
         if (!topicList) {
             $topicList.html('');
             element.render();
@@ -189,6 +202,7 @@
 
         $addMonitorTopicSelect.html(topicSelectHtml);
         $showMonitorTopicSelect.html(topicSelectHtml);
+        $manageMonitorTopicSelect.html(topicSelectHtml);
         form.render();
 
         element.on('nav(topic-nav)', function (elem) {
@@ -248,6 +262,7 @@
         let $consumerList = $("#consumer-list");
         let $addMonitorConsumerSelect = $("#add-monitor-consumer-select");
         let $showMonitorConsumerSelect = $("#show-monitor-consumer-select");
+        let $manageMonitorConsumerSelect = $("#manage-monitor-consumer-select");
         if (!consumerList) {
             $consumerList.html('');
             element.render();
@@ -266,6 +281,7 @@
 
         $addMonitorConsumerSelect.html(consumerSelectHtml);
         $showMonitorConsumerSelect.html(consumerSelectHtml);
+        $manageMonitorConsumerSelect.html(consumerSelectHtml);
         form.render();
 
         element.on('nav(consumer-nav)', function (elem) {
@@ -306,11 +322,13 @@
         form.on('submit(show-monitor)', function (parameters) {
             const data = parameters.field;
             let timeRange = data['timeRange'];
-            if (timeRange) {
-                let timeRangeArr = timeRange.split(' - ');
-                data['startTime'] = timeRangeArr[0];
-                data['endTime'] = timeRangeArr[1];
+            if (!timeRange) {
+                showErrorInfo("请选择时间范围");
+                return false;
             }
+            let timeRangeArr = timeRange.split(' - ');
+            data['startTime'] = timeRangeArr[0];
+            data['endTime'] = timeRangeArr[1];
             showMonitorChart(data);
             return false;
         });
@@ -318,14 +336,19 @@
 
     function showMonitorChart(requestData) {
         let monitorDataUrl = urls.getMonitorData;
+        const consumer = requestData['consumer'];
+        const topic = requestData['topic'];
+        const interval = requestData['interval'];
+        const startTime = requestData['startTime'];
+        const endTime = requestData['endTime'];
+
         monitorDataUrl += '?clusterName=' + currentCluster;
-        monitorDataUrl += '&consumer=' + requestData['consumer'];
-        monitorDataUrl += '&topic=' + requestData['topic'];
-        monitorDataUrl += '&interval=' + requestData['interval'];
-        monitorDataUrl += '&startTime=' + requestData['startTime'];
-        monitorDataUrl += '&endTime=' + requestData['endTime'];
+        monitorDataUrl += '&consumer=' + consumer;
+        monitorDataUrl += '&topic=' + topic;
+        monitorDataUrl += '&interval=' + interval;
+        monitorDataUrl += '&startTime=' + startTime;
+        monitorDataUrl += '&endTime=' + endTime;
         ajaxGet(monitorDataUrl, function (monitorDataList) {
-            console.log(monitorDataList);
             const subtext = 'Topic: ' + requestData['topic'] + '   Consumer: ' + requestData['consumer'];
 
             let xAxisData = [];
@@ -459,7 +482,79 @@
         });
     }
 
-    function ajaxGet(url, callback) {
+    function initManageMonitorSelectBtn() {
+        form.on('submit(manage-monitor-select)', function (parameters) {
+            const data = parameters.field;
+            showManageMonitorTable(data);
+            return false;
+        });
+    }
+
+    function showOperate(data) {
+        const checked = data['isActive'] ? 'checked' : '';
+        return '<form class="layui-form" lay-filter="is-active-filter-' + data['id'] + '">' +
+            '<input type="checkbox" id="monitor-task-' + data['id'] + '" name="isActive" ' +
+            'lay-skin="switch" lay-text="启用|禁用" lay-filter="is-active-checkbox" ' + checked + '>  ' +
+            '<a id="monitor-task-delete-' + data['id'] + '" class="layui-btn layui-btn-danger layui-btn-xs" ' +
+            'lay-filter="monitor-task-delete-filter" lay-submit>删除</a>' +
+            '</form>';
+    }
+
+    function showManageMonitorTable(requestData) {
+        let listMonitorUrl = urls.listMonitor;
+        listMonitorUrl += '?clusterName=' + currentCluster;
+        listMonitorUrl += '&consumer=' + requestData['consumer'];
+        listMonitorUrl += '&topic=' + requestData['topic'];
+
+        ajaxGet(listMonitorUrl, function (monitorTaskList) {
+            table.render({
+                elem: '#monitor-task-table',
+                data: monitorTaskList,
+                page: true,
+                cols: tableCol.monitorTask
+            });
+            form.on('switch(is-active-checkbox)', function (obj) {
+                let url = obj.elem.checked ? urls.activeMonitor : urls.disableMonitor;
+                const monitorTaskId = obj.elem.id.replace(/monitor-task-/, '');
+                url = url.replace(/{id}/, monitorTaskId);
+                ajaxPut(url, null, doNothing, function (errorMsg) {
+                    layer.open({
+                        title: 'Error',
+                        content: errorMsg,
+                        end: function () {
+                            form.val('is-active-filter-' + monitorTaskId, {
+                                "isActive": !obj.elem.checked
+                            })
+                        }
+                    });
+                });
+            });
+
+            form.on('submit(monitor-task-delete-filter)', function (obj) {
+                const monitorTaskId = obj.elem.id.replace(/monitor-task-delete-/, '');
+                layer.open({
+                    type: 1,
+                    title: '提示',
+                    area: ["260px", "160px"],
+                    content: '<div style="padding:20px">确认删除?</div>',
+                    btn: ['确认', '取消'],
+                    yes: function (index) {
+                        const url = urls.removeMonitor.replace(/{id}/, monitorTaskId);
+                        ajaxDelete(url,
+                            function () {
+                                layer.close(index);
+                                showManageMonitorTable(requestData);
+                            }, function (errorMsg) {
+                                showErrorInfo(errorMsg);
+                            });
+                    }
+                });
+                return false;
+            })
+        });
+    }
+
+    function ajaxGet(url, callback, errorCallback) {
         $.ajax({
             url: url,
             type: 'GET',
@@ -474,11 +569,14 @@
             },
             complete: function () {
                 layer.close(layerShade);
+            },
+            error: function (XMLHttpRequest, errorMsg, error) {
+                errorCallback(errorMsg, error);
             }
         });
     }
 
-    function ajaxPost(url, data, callback) {
+    function ajaxPost(url, data, callback, errorCallback) {
         $.ajax({
             url: url,
             type: 'POST',
@@ -495,19 +593,72 @@
             },
             complete: function () {
                 layer.close(layerShade);
+            },
+            error: function (XMLHttpRequest, errorMsg, error) {
+                errorCallback(errorMsg, error);
             }
         });
     }
 
-    function ajaxCallback(result, callback) {
+    function ajaxPut(url, data, callback, errorCallback) {
+        $.ajax({
+            url: url,
+            type: 'PUT',
+            data: data,
+            dataType: 'json',
+            contentType: 'application/json;charset=UTF-8',
+            success: function (result) {
+                ajaxCallback(result, callback, errorCallback)
+            },
+            beforeSend: function () {
+                layerShade = layer.load(1, {
+                    shade: [0.5, '#393D49']
+                });
+            },
+            complete: function () {
+                layer.close(layerShade);
+            },
+            error: function (XMLHttpRequest, errorMsg, error) {
+                errorCallback(errorMsg, error);
+            }
+        });
+    }
+
+    function ajaxDelete(url, callback, errorCallback) {
+        $.ajax({
+            url: url,
+            type: 'DELETE',
+            dataType: 'json',
+            success: function (result) {
+                ajaxCallback(result, callback, errorCallback)
+            },
+            beforeSend: function () {
+                layerShade = layer.load(1, {
+                    shade: [0.5, '#393D49']
+                });
+            },
+            complete: function () {
+                layer.close(layerShade);
+            },
+            error: function (XMLHttpRequest, errorMsg, error) {
+                errorCallback(errorMsg, error);
+            }
+        });
+    }
+
+    function ajaxCallback(result, callback, errorCallback) {
         if (!result) {
             showErrorInfo('调用失败');
             return
         }
         if (result.success) {
             callback(result.data);
+            return;
+        }
+        console.log(result.message);
+        if (errorCallback) {
+            errorCallback(result.message)
         } else {
-            console.log(result.message);
             showErrorInfo(result.message);
         }
     }
@@ -519,5 +670,8 @@
             anim: 5,
             time: 5000
         });
+    }
+
+    function doNothing() {
     }
 }();

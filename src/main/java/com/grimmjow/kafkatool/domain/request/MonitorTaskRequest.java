@@ -1,7 +1,7 @@
 package com.grimmjow.kafkatool.domain.request;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import com.grimmjow.kafkatool.entity.MonitorTask;
+import lombok.*;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
@@ -12,6 +12,9 @@ import javax.validation.constraints.NotNull;
  * @date 2020/8/28
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @EqualsAndHashCode
 public class MonitorTaskRequest {
 
@@ -41,4 +44,12 @@ public class MonitorTaskRequest {
     @EqualsAndHashCode.Exclude
     private Long interval;
 
+    public MonitorTask convertToMonitorTask() {
+        return MonitorTask.builder()
+                .clusterName(this.clusterName)
+                .consumer(this.consumer)
+                .topic(this.topic)
+                .interval(this.interval)
+                .build();
+    }
 }

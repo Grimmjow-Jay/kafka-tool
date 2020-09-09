@@ -71,6 +71,9 @@ public class ConsumerTopicOffsetVo implements Serializable {
     private Date date;
 
     public static ConsumerTopicOffset convert(ConsumerTopicOffsetVo consumerTopicOffsetVo) {
+        if (consumerTopicOffsetVo == null) {
+            return null;
+        }
         return ConsumerTopicOffset.builder()
                 .clusterName(consumerTopicOffsetVo.getClusterName())
                 .consumer(consumerTopicOffsetVo.getConsumer())

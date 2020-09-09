@@ -1,8 +1,11 @@
 package com.grimmjow.kafkatool.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 /**
  * @author Grimm
@@ -11,7 +14,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Cluster {
+@Builder
+public class Cluster implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private Long id;
 
