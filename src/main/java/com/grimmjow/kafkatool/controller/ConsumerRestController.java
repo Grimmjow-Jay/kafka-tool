@@ -1,13 +1,13 @@
 package com.grimmjow.kafkatool.controller;
 
+import com.grimmjow.kafkatool.domain.request.EditOffsetRequest;
+import com.grimmjow.kafkatool.domain.response.Empty;
 import com.grimmjow.kafkatool.domain.response.ResponseEntity;
 import com.grimmjow.kafkatool.service.ConsumerService;
 import com.grimmjow.kafkatool.vo.ConsumerTopicOffsetVo;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.util.List;
 
@@ -36,6 +36,14 @@ public class ConsumerRestController {
             @NotBlank(message = "集群名不能为空") @PathVariable String clusterName,
             @NotBlank(message = "消费者名不能为空") @PathVariable String consumerName) {
         return ResponseEntity.success(consumerService.offsets(clusterName, consumerName));
+    }
+
+    @PutMapping("/offsets/{clusterName}/{consumerName}")
+    public ResponseEntity<Empty> editOffset(@NotBlank(message = "集群名不能为空") @PathVariable String clusterName,
+                                            @NotBlank(message = "消费者名不能为空") @PathVariable String consumerName,
+                                            @Valid @RequestBody EditOffsetRequest editOffsetRequest) {
+        consumerService.editOffset(clusterName, consumerName, editOffsetRequest);
+        return ResponseEntity.success();
     }
 
 }

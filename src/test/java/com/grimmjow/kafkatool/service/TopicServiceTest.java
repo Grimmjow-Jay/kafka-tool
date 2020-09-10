@@ -27,4 +27,14 @@ public class TopicServiceTest extends TestAbstract {
         List<KafkaData<String, String>> kafkaDataList = topicService.fetchMessage(clusterName, topic, fetchMessageRequest);
         kafkaDataList.forEach(System.out::println);
     }
+
+    @Test
+    public void produce() {
+        String clusterName = "local_203";
+        String topic = "grimm_test_topic";
+        String key = "produce_key";
+        String message = "produce_message" + System.currentTimeMillis();
+        topicService.produce(clusterName, topic, key, message);
+    }
+
 }

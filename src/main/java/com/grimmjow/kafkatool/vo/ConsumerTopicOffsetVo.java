@@ -2,10 +2,7 @@ package com.grimmjow.kafkatool.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -18,6 +15,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString
 public class ConsumerTopicOffsetVo implements Serializable {
 
     private static final long serialVersionUID = 1L;

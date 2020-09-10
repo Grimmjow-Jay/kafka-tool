@@ -203,4 +203,10 @@ public class KafkaClient {
         return Lists.newArrayList(consumerTopicOffsetMap.values());
     }
 
+    public void editOffset(String consumer, String topic, int partition, long offset) {
+        Map<TopicPartition, OffsetAndMetadata> offsets = Maps.newHashMap();
+        offsets.put(new TopicPartition(topic, partition), new OffsetAndMetadata(offset));
+        adminClient.alterConsumerGroupOffsets(consumer, offsets);
+    }
+
 }

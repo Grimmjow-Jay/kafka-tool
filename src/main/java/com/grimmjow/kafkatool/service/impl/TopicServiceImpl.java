@@ -111,7 +111,7 @@ public class TopicServiceImpl implements TopicService {
         for (KafkaTopicPartition assignPartition : assignPartitions) {
             Pair<Long, Long> offsetPair = offsetPair(assignPartition.getOffset(), fetchRequest.getStartOffset(), fetchRequest.getEndOffset());
             TopicPartition topicPartition = new TopicPartition(topic, assignPartition.getPartition());
-            result.addAll(fetchMessage(cluster.getBootstrapServers(), topicPartition, offsetPair.getKey(), offsetPair.getKey()));
+            result.addAll(fetchMessage(cluster.getBootstrapServers(), topicPartition, offsetPair.getKey(), offsetPair.getValue()));
         }
         return result;
     }

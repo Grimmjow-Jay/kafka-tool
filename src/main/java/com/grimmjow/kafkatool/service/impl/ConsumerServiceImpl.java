@@ -1,6 +1,7 @@
 package com.grimmjow.kafkatool.service.impl;
 
 import com.grimmjow.kafkatool.component.KafkaClientPool;
+import com.grimmjow.kafkatool.domain.request.EditOffsetRequest;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.exception.KafkaClientException;
 import com.grimmjow.kafkatool.service.ConsumerService;
@@ -48,5 +49,18 @@ public class ConsumerServiceImpl implements ConsumerService {
                 .comparing(ConsumerTopicOffsetVo::getTopic)
                 .thenComparing(ConsumerTopicOffsetVo::getPartition));
         return topicOffsetVoList;
+    }
+
+    @Override
+    public void editOffset(String clusterName, String consumerName, EditOffsetRequest editOffsetRequest) {
+        String topic = editOffsetRequest.getTopic();
+        Integer partition = editOffsetRequest.getPartition();
+        Long offset = editOffsetRequest.getOffset();
+        try {
+            kafkaClientPool.getClient(clusterName).editOffset(consumerName, topic, partition, offset);
+        } catch (KafkaClientException e) {
+            log.error("编辑消费Offset位置异常", e);
+            throw new BaseException("编辑消费Offset位置异常");
+        }
     }
 }
