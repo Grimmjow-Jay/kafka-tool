@@ -54,4 +54,18 @@ public class BaseException extends RuntimeException {
     public static void assertEmpty(Map<?, ?> map, String message) {
         assertCondition(map == null || map.isEmpty(), message);
     }
+
+    public static <T extends Comparable<T>> void assertBigger(T value, T comparison, String message) {
+        assertNull(comparison, "Comparison cannot be null.");
+        assertNull(comparison, "value cannot be null.");
+        assertCondition(value.compareTo(comparison) > 0, message);
+    }
+
+    public static <T extends Comparable<T>> void assertSmaller(T value, T comparison, String message) {
+        assertNull(comparison, "Comparison cannot be null.");
+        assertNull(comparison, "value cannot be null.");
+        assertCondition(value.compareTo(comparison) < 0, message);
+    }
+
+
 }

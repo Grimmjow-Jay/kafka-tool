@@ -1,13 +1,17 @@
 package com.grimmjow.kafkatool.domain.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Grimm
  * @date 2020/9/9
  */
 @Data
-public class FetchDataRequest {
+@AllArgsConstructor
+@NoArgsConstructor
+public class FetchMessageRequest {
 
     /**
      * 分区

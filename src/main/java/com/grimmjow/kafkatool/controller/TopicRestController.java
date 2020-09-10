@@ -2,7 +2,8 @@ package com.grimmjow.kafkatool.controller;
 
 import com.grimmjow.kafkatool.domain.KafkaTopic;
 import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
-import com.grimmjow.kafkatool.domain.request.FetchDataRequest;
+import com.grimmjow.kafkatool.domain.request.FetchMessageRequest;
+import com.grimmjow.kafkatool.domain.request.ProduceMessageRequest;
 import com.grimmjow.kafkatool.domain.response.Empty;
 import com.grimmjow.kafkatool.domain.response.ResponseEntity;
 import com.grimmjow.kafkatool.service.TopicService;
@@ -45,11 +46,21 @@ public class TopicRestController {
         return ResponseEntity.success();
     }
 
-    @GetMapping("/data/{clusterName}/{topic}")
-    public ResponseEntity<List<KafkaData>> fetchMessageData(@NotBlank(message = "集群名不能为空") @PathVariable("clusterName") String clusterName,
-                                                            @NotBlank(message = "Topic不能为空") @PathVariable("topic") String topic,
-                                                            FetchDataRequest fetchDataRequest) {
-        return ResponseEntity.success(topicService.fetchMessageData(clusterName, topic, fetchDataRequest));
+    @GetMapping("/message/{clusterName}/{topic}")
+    public ResponseEntity<List<KafkaData<String, String>>> fetchMessage(
+            @NotBlank(message = "集群名不能为空") @PathVariable("clusterName") String clusterName,
+            @NotBlank(message = "Topic不能为空") @PathVariable("topic") String topic,
+            FetchMessageRequest fetchMessageRequest) {
+        fetchMessageRequest = fetchMessageRequest == null ? new FetchMessageRequest() : fetchMessageRequest;
+        return ResponseEntity.success(topicService.fetchMessage(clusterName, topic, fetchMessageRequest));
+    }
+
+    @PostMapping("/message/{clusterName}/{topic}")
+    public ResponseEntity<Empty> produce(@NotBlank(message = "集群名不能为空") @PathVariable("clusterName") String clusterName,
+                                         @NotBlank(message = "Topic不能为空") @PathVariable("topic") String topic,
+                                         @Valid @RequestBody ProduceMessageRequest request) {
+        topicService.produce(clusterName, topic, request.getKey(), request.getMessage());
+        return ResponseEntity.success();
     }
 
 }
