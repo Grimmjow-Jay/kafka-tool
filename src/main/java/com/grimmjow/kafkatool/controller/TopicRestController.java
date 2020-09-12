@@ -2,7 +2,7 @@ package com.grimmjow.kafkatool.controller;
 
 import com.grimmjow.kafkatool.domain.KafkaTopic;
 import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
-import com.grimmjow.kafkatool.domain.request.FetchMessageRequest;
+import com.grimmjow.kafkatool.domain.request.LoadMessageRequest;
 import com.grimmjow.kafkatool.domain.request.ProduceMessageRequest;
 import com.grimmjow.kafkatool.domain.response.Empty;
 import com.grimmjow.kafkatool.domain.response.ResponseEntity;
@@ -47,12 +47,11 @@ public class TopicRestController {
     }
 
     @GetMapping("/message/{clusterName}/{topic}")
-    public ResponseEntity<List<KafkaData<String, String>>> fetchMessage(
+    public ResponseEntity<List<KafkaData<String, String>>> loadMessage(
             @NotBlank(message = "集群名不能为空") @PathVariable("clusterName") String clusterName,
             @NotBlank(message = "Topic不能为空") @PathVariable("topic") String topic,
-            FetchMessageRequest fetchMessageRequest) {
-        fetchMessageRequest = fetchMessageRequest == null ? new FetchMessageRequest() : fetchMessageRequest;
-        return ResponseEntity.success(topicService.fetchMessage(clusterName, topic, fetchMessageRequest));
+            LoadMessageRequest loadMessageRequest) {
+        return ResponseEntity.success(topicService.loadMessage(clusterName, topic, loadMessageRequest));
     }
 
     @PostMapping("/message/{clusterName}/{topic}")

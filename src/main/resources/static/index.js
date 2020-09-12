@@ -14,6 +14,7 @@
         getBrokers: '/cluster/nodes/{clusterName}',
         getTopics: '/topic/topics/{clusterName}',
         getTopicDetail: '/topic/detail/{clusterName}/{topic}',
+        loadMessage: '/topic/message/{clusterName}/{topic}',
         getConsumers: '/consumer/consumers/{clusterName}',
         getConsumerOffsets: '/consumer/offsets/{clusterName}/{consumerName}',
         addCluster: '/cluster',
@@ -22,7 +23,8 @@
         activeMonitor: '/monitor/active/{id}',
         disableMonitor: '/monitor/disable/{id}',
         getMonitorData: '/monitor/offset-data',
-        listMonitor: '/monitor/list'
+        listMonitor: '/monitor/list',
+
     };
 
     const tableCol = {
@@ -30,15 +32,13 @@
             {field: 'consumer', title: '消费者'},
             {field: 'topic', title: 'Topic'},
             {field: 'interval', title: '时间间隔(秒)'},
-            {field: 'isActive', title: '操作', align: 'center', templet: showOperate}
+            {field: 'operate', title: '操作', align: 'center', templet: showMonitorTaskOperate}
         ]]
     };
 
     updateCluster();
     initAddClusterBtn();
-    initAddMonitorBtn();
-    initShowMonitorChart();
-    initManageMonitorSelectBtn();
+    initEditOffsetBtn();
 
     form.render();
     layui.laydate.render({
@@ -63,6 +63,12 @@
         });
     }
 
+    function initEditOffsetBtn() {
+        $('.edit-offset').on('click', function (element) {
+            console.log(element);
+        });
+    }
+
     function addCluster(dom, index) {
         form.render(null, 'add-cluster-filter');
         form.on('submit(add-cluster-filter)', function (parameters) {
@@ -77,7 +83,7 @@
         });
     }
 
-    function initAddMonitorBtn() {
+    function bindAddMonitorBtn() {
         $('#add-monitor-btn').on('click', function () {
             if (!currentCluster) {
                 showErrorInfo("请先选择集群");
@@ -121,13 +127,24 @@
         $("#cluster-select").html(clusterSelectHtml);
 
         form.on('select(cluster)', function (elem) {
-            if (elem && elem.value) {
+            if (elem && elem.value && elem.value !== currentCluster) {
                 currentCluster = elem.value;
+
+                bindAddMonitorBtn();
+                bindShowMonitorChart();
+                bindManageMonitorSelectBtn();
+
                 updateTopics();
                 updateBrokers();
                 updateConsumers();
             }
         });
+
+        form.on('submit(load-message)', () => false);
+        form.on('submit(show-monitor)', () => false);
+        form.on('submit(manage-monitor-select)', () => false);
+        form.on('submit(add-monitor-filter)', () => false);
+
         form.render();
     }
 
@@ -161,6 +178,7 @@
         let $addMonitorTopicSelect = $("#add-monitor-topic-select");
         let $showMonitorTopicSelect = $("#show-monitor-topic-select");
         let $manageMonitorTopicSelect = $("#manage-monitor-topic-select");
+        let $loadMessagePartitionSelect = $("#load-message-partition-select");
         if (!topicList) {
             $topicList.html('');
             element.render();
@@ -180,6 +198,8 @@
         $addMonitorTopicSelect.html(topicSelectHtml);
         $showMonitorTopicSelect.html(topicSelectHtml);
         $manageMonitorTopicSelect.html(topicSelectHtml);
+
+        $loadMessagePartitionSelect.html('<option value="">选择分区</option>');
         form.render();
 
         element.on('nav(topic-nav)', function (elem) {
@@ -197,24 +217,45 @@
 
     function showTopicDetail(topicDetail) {
         let $topicDetailTable = $("#topic-detail-table");
+        let $loadMessagePartitionSelect = $("#load-message-partition-select");
+        let $loadMessageTopic = $("#load-message-topic");
         if (!topicDetail) {
             $topicDetailTable.html('');
             return;
         }
-        let brokersTableHtml = '';
+        let topicsTableHtml = '';
+        let partitionSelectHtml = '<option value="">选择分区</option>';
         let topicName = topicDetail["name"];
         let partitions = topicDetail["partitions"];
         for (let i = 0; i < partitions.length; i++) {
             const partition = partitions[i];
-            brokersTableHtml += '<tr><td>' + topicName + '</td>';
-            brokersTableHtml += '<td>' + partition["partition"] + '</td>';
-            brokersTableHtml += '<td>' + partition["offset"] + '</td>';
-            brokersTableHtml += '<td>' + concatPartition(partition["replicas"]) + '</td>';
+            topicsTableHtml += '<tr><td>' + topicName + '</td>';
+            topicsTableHtml += '<td>' + partition["partition"] + '</td>';
+            topicsTableHtml += '<td>' + partition["offset"] + '</td>';
+            topicsTableHtml += '<td>' + concatPartition(partition["replicas"]) + '</td>';
             const leader = partition["leader"];
-            brokersTableHtml += '<td>' + leader["host"] + ':' + leader["port"] + '</td></tr>';
+            topicsTableHtml += '<td>' + leader["host"] + ':' + leader["port"] + '</td></tr>';
+            partitionSelectHtml += '<option value="' + partition["partition"] + '">' + partition["partition"] + '</option>';
         }
-        $topicDetailTable.html(brokersTableHtml);
+        $topicDetailTable.html(topicsTableHtml);
         element.render();
+
+        $loadMessagePartitionSelect.html(partitionSelectHtml);
+        form.render();
+
+        $loadMessageTopic.val(topicName);
+        form.on('submit(load-message)', function (parameters) {
+            const field = parameters.field;
+            let url = urls.loadMessage.replace(/{clusterName}/, currentCluster)
+                .replace(/{topic}/, field['topic']);
+            url += '?partition=' + field['partition'];
+            url += '&startOffset=' + field['startOffset'];
+            url += '&endOffset=' + field['endOffset'];
+            ajaxGet(url, function (messageData) {
+                showTopicMessageTable(messageData);
+            });
+            return false;
+        });
     }
 
     function concatPartition(nodeList) {
@@ -228,6 +269,26 @@
             }
         }
         return partitionHtml;
+    }
+
+    function showTopicMessageTable(messageData) {
+        let $topicMessageTable = $("#topic-message-table");
+        let messageTableHtml = '';
+        if (!messageData) {
+            $topicMessageTable.html(messageTableHtml);
+            return;
+        }
+        for (let i = 0; i < messageData.length; i++) {
+            const message = messageData[i];
+            messageTableHtml += '<tr><td>' + message['topic'] + '</td>';
+            messageTableHtml += '<td>' + message['partition'] + '</td>';
+            messageTableHtml += '<td>' + message['offset'] + '</td>';
+            messageTableHtml += '<td>' + message['key'] + '</td>';
+            messageTableHtml += '<td>' + message['message'] + '</td>';
+            messageTableHtml += '<td>' + message['timestamp'] + '</td>';
+            messageTableHtml += '<td>' + message['date'] + '</td></tr>';
+        }
+        $topicMessageTable.html(messageTableHtml);
     }
 
     function updateConsumers() {
@@ -288,13 +349,17 @@
             consumerOffsetsTableHtml += '<td>' + consumerOffset["partition"] + '</td>';
             consumerOffsetsTableHtml += '<td>' + consumerOffset["offset"] + '</td>';
             consumerOffsetsTableHtml += '<td>' + consumerOffset["logSize"] + '</td>';
-            consumerOffsetsTableHtml += '<td>' + consumerOffset["lag"] + '</td></tr>';
+            consumerOffsetsTableHtml += '<td>' + consumerOffset["lag"] + '</td>';
+            consumerOffsetsTableHtml += '<td><button consumer="' + consumerOffset["consumer"] + '" ' +
+                'topic="' + consumerOffset["topic"] + '" ' +
+                'partition="' + consumerOffset["partition"] + '" ' +
+                'class="layui-btn layui-btn-primary layui-btn-sm edit-offset">编辑offset</button></td></tr>';
         }
         $consumerTopicTable.html(consumerOffsetsTableHtml);
         element.render();
     }
 
-    function initShowMonitorChart() {
+    function bindShowMonitorChart() {
         monitorChart = echarts.init($("#monitor-chart")[0]);
         form.on('submit(show-monitor)', function (parameters) {
             const data = parameters.field;
@@ -489,7 +554,7 @@
         });
     }
 
-    function initManageMonitorSelectBtn() {
+    function bindManageMonitorSelectBtn() {
         form.on('submit(manage-monitor-select)', function (parameters) {
             const data = parameters.field;
             showManageMonitorTable(data);
@@ -497,7 +562,7 @@
         });
     }
 
-    function showOperate(data) {
+    function showMonitorTaskOperate(data) {
         const checked = data['isActive'] ? 'checked' : '';
         return '<form class="layui-form" lay-filter="is-active-filter-' + data['id'] + '">' +
             '<input type="checkbox" id="monitor-task-' + data['id'] + '" name="isActive" ' +

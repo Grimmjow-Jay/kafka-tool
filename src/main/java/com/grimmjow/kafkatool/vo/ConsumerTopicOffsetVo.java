@@ -63,7 +63,7 @@ public class ConsumerTopicOffsetVo implements Serializable {
     /**
      * 时间戳对应的时间
      */
-    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(timezone = "GMT+8")
     private Date date;
 
     public static ConsumerTopicOffset convert(ConsumerTopicOffsetVo consumerTopicOffsetVo) {

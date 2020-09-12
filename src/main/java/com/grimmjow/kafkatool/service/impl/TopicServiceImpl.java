@@ -6,7 +6,7 @@ import com.grimmjow.kafkatool.config.ConstantConfig;
 import com.grimmjow.kafkatool.domain.KafkaTopic;
 import com.grimmjow.kafkatool.domain.KafkaTopicPartition;
 import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
-import com.grimmjow.kafkatool.domain.request.FetchMessageRequest;
+import com.grimmjow.kafkatool.domain.request.LoadMessageRequest;
 import com.grimmjow.kafkatool.entity.Cluster;
 import com.grimmjow.kafkatool.exception.BaseException;
 import com.grimmjow.kafkatool.exception.KafkaClientException;
@@ -49,8 +49,11 @@ public class TopicServiceImpl implements TopicService {
 
     private final ClusterMapper clusterMapper;
 
-    @Value("${topic.data.maxFetchSize:1000}")
-    private long maxFetchSize;
+    @Value("${topic.data.maxLoadSize:1000}")
+    private long maxLoadSize;
+
+    @Value("${topic.data.defaultLoadSize:20}")
+    private long defaultLoadSize;
 
     public TopicServiceImpl(KafkaClientPool kafkaClientPool, ClusterMapper clusterMapper) {
         this.kafkaClientPool = kafkaClientPool;
@@ -89,8 +92,8 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
-    public List<KafkaData<String, String>> fetchMessage(String clusterName, String topic, FetchMessageRequest fetchRequest) {
-        checkFetchMessageRequest(fetchRequest);
+    public List<KafkaData<String, String>> loadMessage(String clusterName, String topic, LoadMessageRequest loadRequest) {
+        checkLoadMessageRequest(loadRequest);
 
         Cluster cluster = clusterMapper.getByName(clusterName);
         BaseException.assertNull(cluster, "集群不存在");
@@ -99,7 +102,7 @@ public class TopicServiceImpl implements TopicService {
         Collection<KafkaTopicPartition> assignPartitions = detail.getPartitions();
         BaseException.assertEmpty(assignPartitions, "该Topic没有分区信息");
 
-        Integer requestPartition = fetchRequest.getPartition();
+        Integer requestPartition = loadRequest.getPartition();
         if (requestPartition != null) {
             assignPartitions = assignPartitions.stream()
                     .filter(e -> e.getPartition() == requestPartition)
@@ -109,23 +112,24 @@ public class TopicServiceImpl implements TopicService {
 
         List<KafkaData<String, String>> result = Lists.newArrayList();
         for (KafkaTopicPartition assignPartition : assignPartitions) {
-            Pair<Long, Long> offsetPair = offsetPair(assignPartition.getOffset(), fetchRequest.getStartOffset(), fetchRequest.getEndOffset());
+            Pair<Long, Long> offsetPair = offsetPair(assignPartition.getOffset(), loadRequest.getStartOffset(), loadRequest.getEndOffset());
             TopicPartition topicPartition = new TopicPartition(topic, assignPartition.getPartition());
-            result.addAll(fetchMessage(cluster.getBootstrapServers(), topicPartition, offsetPair.getKey(), offsetPair.getValue()));
+            result.addAll(loadMessage(cluster.getBootstrapServers(), topicPartition, offsetPair.getKey(), offsetPair.getValue()));
         }
         return result;
     }
 
-    private void checkFetchMessageRequest(FetchMessageRequest fetchRequest) {
-        Long requestStartOffset = fetchRequest.getStartOffset();
-        Long requestEndOffset = fetchRequest.getEndOffset();
+    private void checkLoadMessageRequest(LoadMessageRequest loadRequest) {
+        Long requestStartOffset = loadRequest.getStartOffset();
+        Long requestEndOffset = loadRequest.getEndOffset();
 
         if (requestStartOffset != null) {
             BaseException.assertSmaller(requestStartOffset, 0L, "开始Offset不能小于0");
         }
         if (requestStartOffset != null && requestEndOffset != null) {
             BaseException.assertBigger(requestStartOffset, requestEndOffset, "开始Offset不能大于结束Offset");
-            BaseException.assertBigger(requestEndOffset - requestStartOffset, maxFetchSize, "单个分区获取的最大数据量不能");
+            BaseException.assertBigger(requestEndOffset - requestStartOffset, maxLoadSize,
+                    "单个分区获取的最大数据量不能超过" + maxLoadSize);
         }
     }
 
@@ -134,16 +138,16 @@ public class TopicServiceImpl implements TopicService {
         long endOffset;
         if (requestStartOffset == null) {
             if (requestEndOffset == null) {
-                startOffset = Math.max(latestOffset - maxFetchSize, 0);
+                startOffset = Math.max(latestOffset - defaultLoadSize - 1, 0);
                 endOffset = latestOffset;
             } else {
                 endOffset = requestEndOffset;
-                startOffset = Math.max(endOffset - maxFetchSize, 0);
+                startOffset = Math.max(endOffset - defaultLoadSize - 1, 0);
             }
         } else {
             if (requestEndOffset == null) {
                 startOffset = requestStartOffset;
-                endOffset = Math.min(startOffset + maxFetchSize, latestOffset);
+                endOffset = Math.min(startOffset + defaultLoadSize - 1, latestOffset);
             } else {
                 startOffset = requestStartOffset;
                 endOffset = requestEndOffset;
@@ -152,8 +156,8 @@ public class TopicServiceImpl implements TopicService {
         return Pair.of(startOffset, endOffset);
     }
 
-    private List<KafkaData<String, String>> fetchMessage(String bootstrapServers, TopicPartition topicPartition,
-                                                         long startOffset, long endOffset) {
+    private List<KafkaData<String, String>> loadMessage(String bootstrapServers, TopicPartition topicPartition,
+                                                        long startOffset, long endOffset) {
         Properties props = new Properties();
         props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");

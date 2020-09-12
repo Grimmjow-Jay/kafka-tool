@@ -2,7 +2,7 @@ package com.grimmjow.kafkatool.service;
 
 import com.grimmjow.kafkatool.domain.KafkaTopic;
 import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
-import com.grimmjow.kafkatool.domain.request.FetchMessageRequest;
+import com.grimmjow.kafkatool.domain.request.LoadMessageRequest;
 import com.grimmjow.kafkatool.vo.KafkaData;
 
 import java.util.List;
@@ -43,10 +43,10 @@ public interface TopicService {
      *
      * @param clusterName         集群名
      * @param topic               Topic
-     * @param fetchMessageRequest 获取数据的相关参数
+     * @param loadMessageRequest 获取数据的相关参数
      * @return Kafka消息数据
      */
-    List<KafkaData<String, String>> fetchMessage(String clusterName, String topic, FetchMessageRequest fetchMessageRequest);
+    List<KafkaData<String, String>> loadMessage(String clusterName, String topic, LoadMessageRequest loadMessageRequest);
 
     /**
      * 发送消息到指定Topic

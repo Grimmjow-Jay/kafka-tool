@@ -1,5 +1,6 @@
 package com.grimmjow.kafkatool.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.ToString;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author Grimm
@@ -50,6 +52,12 @@ public class KafkaData<K, V> implements Serializable {
      */
     private long timestamp;
 
+    /**
+     * 时间
+     */
+    @JsonFormat(timezone = "GMT+8")
+    private Date date;
+
     public static <K, V> KafkaData<K, V> convertFromConsumerRecord(ConsumerRecord<K, V> consumerRecord) {
         return new KafkaData<>(
                 consumerRecord.topic(),
@@ -57,7 +65,8 @@ public class KafkaData<K, V> implements Serializable {
                 consumerRecord.offset(),
                 consumerRecord.key(),
                 consumerRecord.value(),
-                consumerRecord.timestamp());
+                consumerRecord.timestamp(),
+                new Date(consumerRecord.timestamp()));
     }
 
 }

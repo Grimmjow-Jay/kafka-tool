@@ -29,7 +29,7 @@
         <!-- topic -->
         <div class="layui-tab-item layui-show">
 
-            <div class="layui-col-sm3">
+            <div class="layui-col-sm3" style="width: 25%;float: left">
                 <div>
                     <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="topic-nav" style="width: 90%">
                         <li class="layui-nav-item layui-nav-itemed">
@@ -39,7 +39,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="layui-col-sm7">
+            <div class="layui-col-sm7" style="width: 75%;float: right">
                 <table class="layui-table" lay-even="" lay-skin="row">
                     <thead>
                     <tr>
@@ -52,14 +52,67 @@
                     </thead>
                     <tbody id="topic-detail-table"></tbody>
                 </table>
+                <br/>
+                <hr/>
+                <br/>
+                <form class="layui-form">
+                    <div class="layui-form-item">
+                        <div class="layui-input-inline" style="display: none">
+                            <label>
+                                <input id="load-message-topic" name="topic">
+                            </label>
+                        </div>
+                        <label class="layui-form-label" style="width: 30px; padding-left: 0">分区</label>
+                        <div class="layui-input-inline">
+                            <label>
+                                <select id="load-message-partition-select" lay-search name="partition">
+                                    <option value="">选择分区</option>
+                                </select>
+                            </label>
+                        </div>
+                        <label class="layui-form-label">Offset范围</label>
+                        <div class="layui-input-inline" style="width: 90px">
+                            <label>
+                                <input autocomplete="off" class="layui-input" name="startOffset" type="number">
+                            </label>
+                        </div>
+                        <div class="layui-input-inline" style="width: 10px;padding-top: 10px">
+                            --
+                        </div>
+                        <div class="layui-input-inline" style="width: 90px">
+                            <label>
+                                <input autocomplete="off" class="layui-input" name="endOffset" type="number">
+                            </label>
+                        </div>
+                        <div class="layui-input-inline" style="padding-left: 50px">
+                            <button class="layui-btn layui-btn-normal" id="load-message-btn"
+                                    lay-filter="load-message" lay-submit>加载数据
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <table class="layui-table" lay-even="" lay-skin="row">
+                    <thead>
+                    <tr>
+                        <th>topic</th>
+                        <th>partition</th>
+                        <th>offset</th>
+                        <th>key</th>
+                        <th>message</th>
+                        <th>timestamp</th>
+                        <th>时间</th>
+                    </tr>
+                    </thead>
+                    <tbody id="topic-message-table"></tbody>
+                </table>
             </div>
         </div>
 
         <!-- consumer -->
         <div class="layui-tab-item">
-            <div class="layui-col-sm2">
+            <div class="layui-col-sm3" style="width: 25%;float: left">
                 <div>
-                    <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="consumer-nav">
+                    <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="consumer-nav" style="width: 90%">
                         <li class="layui-nav-item layui-nav-itemed">
                             <dl style="text-align: center;">Consumers</dl>
                             <dl class="layui-nav-child" id="consumer-list"></dl>
@@ -67,7 +120,7 @@
                     </ul>
                 </div>
             </div>
-            <div class="layui-col-sm8">
+            <div class="layui-col-sm7" style="width: 75%;float: right">
                 <table class="layui-table" lay-even="" lay-skin="row">
                     <thead>
                     <tr>
@@ -77,6 +130,7 @@
                         <th>offset</th>
                         <th>logSize</th>
                         <th>lag</th>
+                        <th>操作</th>
                     </tr>
                     </thead>
                     <tbody id="consumer-topic-table"></tbody>

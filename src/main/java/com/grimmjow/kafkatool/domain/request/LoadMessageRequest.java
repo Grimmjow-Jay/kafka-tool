@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FetchMessageRequest {
+public class LoadMessageRequest {
 
     /**
      * 分区

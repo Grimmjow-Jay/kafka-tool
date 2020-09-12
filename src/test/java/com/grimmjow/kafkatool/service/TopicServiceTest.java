@@ -1,7 +1,7 @@
 package com.grimmjow.kafkatool.service;
 
 import com.grimmjow.kafkatool.TestAbstract;
-import com.grimmjow.kafkatool.domain.request.FetchMessageRequest;
+import com.grimmjow.kafkatool.domain.request.LoadMessageRequest;
 import com.grimmjow.kafkatool.vo.KafkaData;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +18,13 @@ public class TopicServiceTest extends TestAbstract {
     private TopicService topicService;
 
     @Test
-    public void fetchMessageData() {
+    public void loadMessageData() {
         String clusterName = "local_203";
         String topic = "grimm_test_topic";
-        FetchMessageRequest fetchMessageRequest = new FetchMessageRequest();
-        fetchMessageRequest.setPartition(0);
-        fetchMessageRequest.setStartOffset(5L);
-        List<KafkaData<String, String>> kafkaDataList = topicService.fetchMessage(clusterName, topic, fetchMessageRequest);
+        LoadMessageRequest loadMessageRequest = new LoadMessageRequest();
+        loadMessageRequest.setPartition(0);
+        loadMessageRequest.setStartOffset(5L);
+        List<KafkaData<String, String>> kafkaDataList = topicService.loadMessage(clusterName, topic, loadMessageRequest);
         kafkaDataList.forEach(System.out::println);
     }
 
