@@ -33,12 +33,20 @@
             {field: 'topic', title: 'Topic'},
             {field: 'interval', title: '时间间隔(秒)'},
             {field: 'operate', title: '操作', align: 'center', templet: showMonitorTaskOperate}
+        ]],
+        consumerOffsets: [[
+            {field: 'consumer', title: '消费者'},
+            {field: 'topic', title: 'Topic'},
+            {field: 'partition', title: 'Partition'},
+            {field: 'offset', title: 'Offset'},
+            {field: 'logSize', title: 'LogSize'},
+            {field: 'lag', title: 'Lag'},
+            {field: 'operate', title: '操作', align: 'center', templet: showConsumerOffsetOperate}
         ]]
     };
 
     updateCluster();
     initAddClusterBtn();
-    initEditOffsetBtn();
 
     form.render();
     layui.laydate.render({
@@ -60,12 +68,6 @@
                 content: $('#add-cluster-div').html(),
                 success: addCluster
             });
-        });
-    }
-
-    function initEditOffsetBtn() {
-        $('.edit-offset').on('click', function (element) {
-            console.log(element);
         });
     }
 
@@ -332,31 +334,18 @@
         let getConsumerOffsetsUrl = urls.getConsumerOffsets
             .replace(/{clusterName}/, currentCluster)
             .replace(/{consumerName}/, consumer);
-        ajaxGet(getConsumerOffsetsUrl, showConsumerOffsets);
-    }
-
-    function showConsumerOffsets(consumerOffsetList) {
-        let $consumerTopicTable = $("#consumer-topic-table");
-        if (!consumerOffsetList) {
-            $consumerTopicTable.html('');
-            return;
-        }
-        let consumerOffsetsTableHtml = '';
-        for (let i = 0; i < consumerOffsetList.length; i++) {
-            const consumerOffset = consumerOffsetList[i];
-            consumerOffsetsTableHtml += '<tr><td>' + consumerOffset["consumer"] + '</td>';
-            consumerOffsetsTableHtml += '<td>' + consumerOffset["topic"] + '</td>';
-            consumerOffsetsTableHtml += '<td>' + consumerOffset["partition"] + '</td>';
-            consumerOffsetsTableHtml += '<td>' + consumerOffset["offset"] + '</td>';
-            consumerOffsetsTableHtml += '<td>' + consumerOffset["logSize"] + '</td>';
-            consumerOffsetsTableHtml += '<td>' + consumerOffset["lag"] + '</td>';
-            consumerOffsetsTableHtml += '<td><button consumer="' + consumerOffset["consumer"] + '" ' +
-                'topic="' + consumerOffset["topic"] + '" ' +
-                'partition="' + consumerOffset["partition"] + '" ' +
-                'class="layui-btn layui-btn-primary layui-btn-sm edit-offset">编辑offset</button></td></tr>';
-        }
-        $consumerTopicTable.html(consumerOffsetsTableHtml);
-        element.render();
+        ajaxGet(getConsumerOffsetsUrl, function (consumerOffsetList) {
+            table.render({
+                elem: '#consumer-offsets-table',
+                data: consumerOffsetList,
+                page: true,
+                cols: tableCol.consumerOffsets
+            });
+        });
+        form.on('submit(edit-offset-filter)', function (obj) {
+            console.log(obj);
+            return false;
+        });
     }
 
     function bindShowMonitorChart() {
@@ -391,6 +380,7 @@
         monitorDataUrl += '&startTime=' + startTime;
         monitorDataUrl += '&endTime=' + endTime;
         ajaxGet(monitorDataUrl, function (monitorDataList) {
+            monitorDataList = fillInterstice(monitorDataList, interval * 1000);
             const subtext = 'Topic: ' + requestData['topic'] + '   Consumer: ' + requestData['consumer'];
 
             let xAxisData = [];
@@ -554,6 +544,40 @@
         });
     }
 
+    function fillInterstice(monitorDataList, interval) {
+        let result = [];
+        const length = monitorDataList.length;
+        if (length === 0) {
+            return result;
+        }
+        const first = monitorDataList[0];
+        first['date'] = timestampToDate(first['timestamp']);
+        result.push(first);
+
+        let timestamp = first['timestamp'];
+        let before = first;
+        for (let i = 1; i < length; i++) {
+            let next = monitorDataList[i];
+            while (next['timestamp'] > (timestamp += interval)) {
+                result.push({
+                    clusterName: before['clusterName'],
+                    consumer: before['consumer'],
+                    topic: before['topic'],
+                    partition: before['partition'],
+                    offset: before['offset'],
+                    logSize: before['logSize'],
+                    lag: before['lag'],
+                    timestamp: timestamp,
+                    date: timestampToDate(timestamp)
+                })
+            }
+            before = next;
+            next['date'] = timestampToDate(next['timestamp']);
+            result.push(next);
+        }
+        return result;
+    }
+
     function bindManageMonitorSelectBtn() {
         form.on('submit(manage-monitor-select)', function (parameters) {
             const data = parameters.field;
@@ -562,13 +586,47 @@
         });
     }
 
+    function timestampToDate(timestamp) {
+        let date = new Date(timestamp);
+        let year = date.getFullYear();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        let seconds = date.getSeconds();
+        let milliseconds = date.getMilliseconds();
+
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+        milliseconds = milliseconds < 10 ? '00' + milliseconds : (milliseconds < 100 ? '0' + milliseconds : milliseconds);
+        let timezoneOffset = date.getTimezoneOffset() / 60;
+        let zone = Math.abs(timezoneOffset);
+        return year + '-' + month + '-' + day + 'T'
+            + hours + ':' + minutes + ':' + seconds + '.' + milliseconds
+            + (timezoneOffset < 0 ? '+' : '-')
+            + (zone < 10 ? '0' + zone + ':00' : zone + ':00');
+    }
+
     function showMonitorTaskOperate(data) {
         const checked = data['isActive'] ? 'checked' : '';
         return '<form class="layui-form" lay-filter="is-active-filter-' + data['id'] + '">' +
             '<input type="checkbox" id="monitor-task-' + data['id'] + '" name="isActive" ' +
-            'lay-skin="switch" lay-text="启用|禁用" lay-filter="is-active-checkbox" ' + checked + '>  ' +
+            'lay-skin="switch" lay-text="启用|禁用" lay-filter="is-active-checkbox" ' + checked + '>' +
+            '<input hidden="hidden" value="' + data['consumer'] + '" name="consumer">' +
             '<a id="monitor-task-delete-' + data['id'] + '" class="layui-btn layui-btn-danger layui-btn-xs" ' +
             'lay-filter="monitor-task-delete-filter" lay-submit>删除</a>' +
+            '</form>';
+    }
+
+    function showConsumerOffsetOperate(data) {
+        return '<form class="layui-form">' +
+            '<input hidden="hidden" value="' + data['consumer'] + '" name="consumer">' +
+            '<input hidden="hidden" value="' + data['topic'] + '" name="topic">' +
+            '<input hidden="hidden" value="' + data['partition'] + '" name="partition">' +
+            '<a class="layui-btn layui-btn-primary layui-btn-sm" lay-filter="edit-offset-filter" lay-submit>编辑Offset</a>' +
             '</form>';
     }
 

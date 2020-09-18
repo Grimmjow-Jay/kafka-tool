@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Grimm
@@ -31,9 +32,9 @@ public class TopicServiceTest extends TestAbstract {
     @Test
     public void produce() {
         String clusterName = "local_203";
-        String topic = "grimm_test_topic";
-        String key = "produce_key";
-        String message = "produce_message" + System.currentTimeMillis();
+        String topic = "BUSINESS_VIRTUAL_ORDER_DELIVERED";
+        String key = UUID.randomUUID().toString();
+        String message = "{\"virtualOrderId\": 2470584}";
         topicService.produce(clusterName, topic, key, message);
     }
 

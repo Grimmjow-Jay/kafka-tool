@@ -94,7 +94,7 @@ public class MonitorServiceImpl implements MonitorService {
 
         consumerTopicOffsetVoList.forEach(ConsumerTopicOffsetVo::updateLag);
 
-        return fillInterstice(consumerTopicOffsetVoList, interval);
+        return consumerTopicOffsetVoList;
     }
 
     private List<ConsumerTopicOffsetVo> fillInterstice(List<ConsumerTopicOffsetVo> consumerTopicOffsetVoList, long interval) {

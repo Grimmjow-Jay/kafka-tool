@@ -28,11 +28,11 @@ public class ConsumerServiceTest extends TestAbstract {
     @Test
     public void editOffset() {
         String clusterName = "local_203";
-        String consumerName = "grimm_test0909";
+        String consumerName = "order";
         EditOffsetRequest editOffsetRequest = new EditOffsetRequest();
-        editOffsetRequest.setTopic("grimm_test_topic");
+        editOffsetRequest.setTopic("BUSINESS_VIRTUAL_ORDER_TO_BE_FULFILLED");
         editOffsetRequest.setPartition(0);
-        editOffsetRequest.setOffset(125L);
+        editOffsetRequest.setOffset(2L);
         consumerService.editOffset(clusterName, consumerName, editOffsetRequest);
     }
 }

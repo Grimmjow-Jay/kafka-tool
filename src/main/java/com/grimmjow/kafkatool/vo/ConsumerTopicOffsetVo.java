@@ -1,11 +1,9 @@
 package com.grimmjow.kafkatool.vo;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.grimmjow.kafkatool.entity.ConsumerTopicOffset;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author Grimm
@@ -60,12 +58,6 @@ public class ConsumerTopicOffsetVo implements Serializable {
      */
     private Long timestamp;
 
-    /**
-     * 时间戳对应的时间
-     */
-    @JsonFormat(timezone = "GMT+8")
-    private Date date;
-
     public static ConsumerTopicOffset convert(ConsumerTopicOffsetVo consumerTopicOffsetVo) {
         if (consumerTopicOffsetVo == null) {
             return null;
@@ -80,10 +72,6 @@ public class ConsumerTopicOffsetVo implements Serializable {
                 .lag(consumerTopicOffsetVo.getLag())
                 .timestamp(System.currentTimeMillis())
                 .build();
-    }
-
-    public Date getDate() {
-        return timestamp == null ? null : new Date(timestamp);
     }
 
     public void updateLag() {
