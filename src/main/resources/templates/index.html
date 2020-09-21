@@ -89,6 +89,9 @@
                                     lay-filter="load-message" lay-submit>加载数据
                             </button>
                         </div>
+                        <div style="float: right">
+                            <button class="layui-btn" id="produce-message" type="button">生产消息</button>
+                        </div>
                     </div>
                 </form>
                 <table class="layui-table" lay-even="" lay-skin="row">
@@ -122,7 +125,7 @@
             </div>
             <div class="layui-col-sm7" style="width: 75%;float: right">
                 <div>
-                    <table id="consumer-offsets-table"></table>
+                    <table id="consumer-offsets-table" lay-filter="consumer-offsets-table-filter"></table>
                 </div>
             </div>
         </div>
@@ -244,7 +247,7 @@
     </form>
 </div>
 <div id="add-monitor-div" style="display: none">
-    <form class="layui-form" lay-filter="add-monitor-filter" style="padding-top: 5%">
+    <form class="layui-form" style="padding-top: 5%">
         <div class="layui-form-item">
             <label class="layui-form-label" style="width: 20%">消费者</label>
             <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
@@ -281,6 +284,83 @@
         </div>
     </form>
 </div>
+<div id="produce-message-div" style="display: none">
+    <form class="layui-form" lay-filter="produce-message-form-filter" style="padding-top: 5%">
+        <div class="layui-form-item">
+            <label class="layui-form-label">Topic</label>
+            <div class="layui-input-block" style="margin-right: 5%">
+                <label>
+                    <input autocomplete="off" class="layui-input" disabled="disabled" name="topic">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">key</label>
+            <div class="layui-input-block" style="margin-right: 5%">
+                <label>
+                    <input autocomplete="off" class="layui-input" name="key">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">message</label>
+            <div class="layui-input-block" style="margin-right: 5%">
+                <label>
+                    <textarea class="layui-textarea" name="message"></textarea>
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block" style="float: right; margin-right: 15%; margin-top: 5%;">
+                <button class="layui-btn layui-btn-normal" lay-filter="produce-message-filter" lay-submit>确 定</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="edit-offset-div" style="display: none">
+    <form class="layui-form" lay-filter="edit-offset-form-filter" style="padding-top: 5%">
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width: 20%">Consumer</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
+                <label>
+                    <input class="layui-input" disabled="disabled" name="consumer">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width: 20%">Topic</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
+                <label>
+                    <input class="layui-input" disabled="disabled" name="topic">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width: 20%">Partition</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
+                <label>
+                    <input class="layui-input" disabled="disabled" name="partition">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width: 20%">Offset</label>
+            <div class="layui-input-block" style="margin-left: 26%;margin-right: 12%">
+                <label>
+                    <input autocomplete="off" class="layui-input" name="offset" type="number">
+                </label>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block" style="float: right; margin-right: 15%; margin-top: 5%;">
+                <button class="layui-btn layui-btn-normal" lay-filter="edit-offset-filter" lay-submit>确 定</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script id="edit-offset-toolbar" type="text/html">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑Offset</a>
+</script>
 <script src="/layui/layui.all.js"></script>
 <script src="/echarts/echarts.min.js"></script>
 <script src="/index.js"></script>

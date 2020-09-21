@@ -38,7 +38,7 @@ public class ConsumerRestController {
         return ResponseEntity.success(consumerService.offsets(clusterName, consumerName));
     }
 
-    @PutMapping("/offsets/{clusterName}/{consumerName}")
+    @PutMapping("/offset/{clusterName}/{consumerName}")
     public ResponseEntity<Empty> editOffset(@NotBlank(message = "集群名不能为空") @PathVariable String clusterName,
                                             @NotBlank(message = "消费者名不能为空") @PathVariable String consumerName,
                                             @Valid @RequestBody EditOffsetRequest editOffsetRequest) {

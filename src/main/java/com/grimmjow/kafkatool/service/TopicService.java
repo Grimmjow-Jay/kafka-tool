@@ -41,8 +41,8 @@ public interface TopicService {
     /**
      * 获取Kafka指定Topic的数据
      *
-     * @param clusterName         集群名
-     * @param topic               Topic
+     * @param clusterName        集群名
+     * @param topic              Topic
      * @param loadMessageRequest 获取数据的相关参数
      * @return Kafka消息数据
      */

@@ -17,6 +17,7 @@
         loadMessage: '/topic/message/{clusterName}/{topic}',
         getConsumers: '/consumer/consumers/{clusterName}',
         getConsumerOffsets: '/consumer/offsets/{clusterName}/{consumerName}',
+        editConsumerOffset: '/consumer/offset/{clusterName}/{consumerName}',
         addCluster: '/cluster',
         addMonitor: '/monitor/add',
         removeMonitor: '/monitor/remove/{id}',
@@ -24,7 +25,7 @@
         disableMonitor: '/monitor/disable/{id}',
         getMonitorData: '/monitor/offset-data',
         listMonitor: '/monitor/list',
-
+        produceMessage: 'topic/message/{clusterName}/{topic}'
     };
 
     const tableCol = {
@@ -35,13 +36,13 @@
             {field: 'operate', title: '操作', align: 'center', templet: showMonitorTaskOperate}
         ]],
         consumerOffsets: [[
-            {field: 'consumer', title: '消费者'},
-            {field: 'topic', title: 'Topic'},
-            {field: 'partition', title: 'Partition'},
-            {field: 'offset', title: 'Offset'},
-            {field: 'logSize', title: 'LogSize'},
-            {field: 'lag', title: 'Lag'},
-            {field: 'operate', title: '操作', align: 'center', templet: showConsumerOffsetOperate}
+            {field: 'consumer', title: 'Consumer', width: '21%'},
+            {field: 'topic', title: 'Topic', width: '37%'},
+            {field: 'partition', title: 'Partition', width: '8%', align: 'center'},
+            {field: 'offset', title: 'Offset', width: '8%', align: 'center'},
+            {field: 'logSize', title: 'LogSize', width: '8%', align: 'center'},
+            {field: 'lag', title: 'Lag', width: '8%', align: 'center'},
+            {field: 'operate', title: '操作', align: 'center', toolbar: '#edit-offset-toolbar'}
         ]]
     };
 
@@ -86,7 +87,7 @@
     }
 
     function bindAddMonitorBtn() {
-        $('#add-monitor-btn').on('click', function () {
+        $('#add-monitor-btn').off("click").on('click', function () {
             if (!currentCluster) {
                 showErrorInfo("请先选择集群");
                 return;
@@ -204,9 +205,12 @@
         $loadMessagePartitionSelect.html('<option value="">选择分区</option>');
         form.render();
 
+        $('#produce-message').off("click");
+
         element.on('nav(topic-nav)', function (elem) {
             const topic = elem.text();
             updateTopicDetail(topic);
+            bindProduceMsgBtn(topic);
         });
     }
 
@@ -293,6 +297,47 @@
         $topicMessageTable.html(messageTableHtml);
     }
 
+    function bindProduceMsgBtn(topic) {
+        $('#produce-message').off("click").on('click', function () {
+            if (!currentCluster) {
+                showErrorInfo("请先选择集群");
+                return;
+            }
+            layer.open({
+                type: 1,
+                title: "生产消息",
+                area: ["700px", "450px"],
+                content: $('#produce-message-div').html(),
+                success: (dom, index) => produceMessage(dom, index, topic)
+            });
+        });
+    }
+
+    function produceMessage(dom, index, topic) {
+        form.render();
+        form.val('produce-message-form-filter', {
+            "topic": topic
+        });
+        form.on('submit(produce-message-filter)', function (parameters) {
+            const produceMessageUrl = urls.produceMessage
+                .replace(/{clusterName}/, currentCluster)
+                .replace(/{topic}/, topic);
+            ajaxPost(produceMessageUrl, JSON.stringify({
+                key: parameters.field.key,
+                message: parameters.field.message
+            }), function () {
+                layer.close(index);
+                updateTopicDetail(topic);
+                layer.msg('操作成功', {
+                    offset: 't',
+                    anim: 5,
+                    time: 5000
+                });
+            });
+            return false;
+        });
+    }
+
     function updateConsumers() {
         const getConsumersUrl = urls.getConsumers.replace(/{clusterName}/, currentCluster);
         ajaxGet(getConsumersUrl, showConsumers);
@@ -341,9 +386,39 @@
                 page: true,
                 cols: tableCol.consumerOffsets
             });
+            table.on('tool(consumer-offsets-table-filter)', function (obj) {
+                layer.open({
+                    type: 1,
+                    title: "编辑Offset",
+                    area: ["650px", "350px"],
+                    content: $('#edit-offset-div').html(),
+                    success: function (dom, index) {
+                        editOffset(dom, index, obj)
+                    }
+                });
+            });
         });
-        form.on('submit(edit-offset-filter)', function (obj) {
-            console.log(obj);
+    }
+
+    function editOffset(dom, index, obj) {
+        form.render();
+        form.val('edit-offset-form-filter', {
+            "consumer": obj.data.consumer,
+            "topic": obj.data.topic,
+            "partition": obj.data.partition
+        });
+        form.on('submit(edit-offset-filter)', function (parameters) {
+            let editConsumerOffsetUrl = urls.editConsumerOffset
+                .replace(/{clusterName}/, currentCluster)
+                .replace(/{consumerName}/, parameters.field.consumer);
+            ajaxPut(editConsumerOffsetUrl, JSON.stringify({
+                topic: parameters.field.topic,
+                partition: parameters.field.partition,
+                offset: parameters.field.offset
+            }), function () {
+                updateConsumerOffsets(parameters.field.consumer);
+                layer.close(index);
+            });
             return false;
         });
     }
@@ -615,18 +690,8 @@
         return '<form class="layui-form" lay-filter="is-active-filter-' + data['id'] + '">' +
             '<input type="checkbox" id="monitor-task-' + data['id'] + '" name="isActive" ' +
             'lay-skin="switch" lay-text="启用|禁用" lay-filter="is-active-checkbox" ' + checked + '>' +
-            '<input hidden="hidden" value="' + data['consumer'] + '" name="consumer">' +
             '<a id="monitor-task-delete-' + data['id'] + '" class="layui-btn layui-btn-danger layui-btn-xs" ' +
             'lay-filter="monitor-task-delete-filter" lay-submit>删除</a>' +
-            '</form>';
-    }
-
-    function showConsumerOffsetOperate(data) {
-        return '<form class="layui-form">' +
-            '<input hidden="hidden" value="' + data['consumer'] + '" name="consumer">' +
-            '<input hidden="hidden" value="' + data['topic'] + '" name="topic">' +
-            '<input hidden="hidden" value="' + data['partition'] + '" name="partition">' +
-            '<a class="layui-btn layui-btn-primary layui-btn-sm" lay-filter="edit-offset-filter" lay-submit>编辑Offset</a>' +
             '</form>';
     }
 
@@ -650,7 +715,7 @@
                 ajaxPut(url, null, doNothing, function (errorMsg) {
                     layer.open({
                         title: 'Error',
-                        content: errorMsg,
+                        content: errorMsg ? errorMsg : 'Error',
                         end: function () {
                             form.val('is-active-filter-' + monitorTaskId, {
                                 "isActive": !obj.elem.checked
