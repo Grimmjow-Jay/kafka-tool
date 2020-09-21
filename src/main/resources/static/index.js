@@ -43,6 +43,15 @@
             {field: 'logSize', title: 'LogSize', width: '8%', align: 'center'},
             {field: 'lag', title: 'Lag', width: '8%', align: 'center'},
             {field: 'operate', title: '操作', align: 'center', toolbar: '#edit-offset-toolbar'}
+        ]],
+        topicMessage: [[
+            {field: 'topic', title: 'topic', width: '10%'},
+            {field: 'partition', title: 'partition', width: '6%'},
+            {field: 'offset', title: 'offset', width: '6%'},
+            {field: 'key', title: 'key', width: '15%'},
+            {field: 'message', title: 'message'},
+            {field: 'timestamp', title: 'timestamp', width: '10%'},
+            {field: 'date', title: '时间', width: '18%'}
         ]]
     };
 
@@ -209,8 +218,20 @@
 
         element.on('nav(topic-nav)', function (elem) {
             const topic = elem.text();
+            clearTopicDataTable();
             updateTopicDetail(topic);
             bindProduceMsgBtn(topic);
+        });
+    }
+
+    function clearTopicDataTable() {
+        table.render({
+            elem: '#topic-message-table',
+            data: [],
+            page: {
+                limit: 20
+            },
+            cols: tableCol.topicMessage
         });
     }
 
@@ -257,9 +278,7 @@
             url += '?partition=' + field['partition'];
             url += '&startOffset=' + field['startOffset'];
             url += '&endOffset=' + field['endOffset'];
-            ajaxGet(url, function (messageData) {
-                showTopicMessageTable(messageData);
-            });
+            ajaxGet(url, showTopicMessageTable);
             return false;
         });
     }
@@ -278,23 +297,14 @@
     }
 
     function showTopicMessageTable(messageData) {
-        let $topicMessageTable = $("#topic-message-table");
-        let messageTableHtml = '';
-        if (!messageData) {
-            $topicMessageTable.html(messageTableHtml);
-            return;
-        }
-        for (let i = 0; i < messageData.length; i++) {
-            const message = messageData[i];
-            messageTableHtml += '<tr><td>' + message['topic'] + '</td>';
-            messageTableHtml += '<td>' + message['partition'] + '</td>';
-            messageTableHtml += '<td>' + message['offset'] + '</td>';
-            messageTableHtml += '<td>' + message['key'] + '</td>';
-            messageTableHtml += '<td>' + message['message'] + '</td>';
-            messageTableHtml += '<td>' + message['timestamp'] + '</td>';
-            messageTableHtml += '<td>' + message['date'] + '</td></tr>';
-        }
-        $topicMessageTable.html(messageTableHtml);
+        table.render({
+            elem: '#topic-message-table',
+            data: messageData,
+            page: {
+                limit: 20
+            },
+            cols: tableCol.topicMessage
+        });
     }
 
     function bindProduceMsgBtn(topic) {
@@ -383,7 +393,9 @@
             table.render({
                 elem: '#consumer-offsets-table',
                 data: consumerOffsetList,
-                page: true,
+                page: {
+                    limit: 20
+                },
                 cols: tableCol.consumerOffsets
             });
             table.on('tool(consumer-offsets-table-filter)', function (obj) {
@@ -705,7 +717,9 @@
             table.render({
                 elem: '#monitor-task-table',
                 data: monitorTaskList,
-                page: true,
+                page: {
+                    limit: 20
+                },
                 cols: tableCol.monitorTask
             });
             form.on('switch(is-active-checkbox)', function (obj) {

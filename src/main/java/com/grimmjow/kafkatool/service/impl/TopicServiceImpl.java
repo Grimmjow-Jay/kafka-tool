@@ -2,7 +2,6 @@ package com.grimmjow.kafkatool.service.impl;
 
 import com.google.common.collect.Lists;
 import com.grimmjow.kafkatool.component.KafkaClientPool;
-import com.grimmjow.kafkatool.config.ConstantConfig;
 import com.grimmjow.kafkatool.domain.KafkaTopic;
 import com.grimmjow.kafkatool.domain.KafkaTopicPartition;
 import com.grimmjow.kafkatool.domain.request.CreateTopicRequest;
@@ -166,11 +165,13 @@ public class TopicServiceImpl implements TopicService {
 
         List<KafkaData<String, String>> result = Lists.newArrayList();
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+            Long beginningOffset = consumer.beginningOffsets(Lists.newArrayList(topicPartition)).get(topicPartition);
+
             consumer.assign(Lists.newArrayList(topicPartition));
-            consumer.seek(topicPartition, startOffset);
+            consumer.seek(topicPartition, Math.max(startOffset, beginningOffset));
 
             ConsumerRecords<String, String> records;
-            Duration timeout = Duration.ofMillis(ConstantConfig.DEFAULT_TIME_OUT);
+            Duration timeout = Duration.ofMillis(1000L);
             while (!(records = consumer.poll(timeout)).isEmpty()) {
                 for (ConsumerRecord<String, String> record : records) {
                     result.add(KafkaData.convertFromConsumerRecord(record));
