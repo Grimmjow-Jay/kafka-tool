@@ -110,11 +110,20 @@ public class TopicServiceImpl implements TopicService {
         BaseException.assertEmpty(assignPartitions, "分区数据有误");
 
         List<KafkaData<String, String>> result = Lists.newArrayList();
-        for (KafkaTopicPartition assignPartition : assignPartitions) {
-            Pair<Long, Long> offsetPair = offsetPair(assignPartition.getOffset(), loadRequest.getStartOffset(), loadRequest.getEndOffset());
-            TopicPartition topicPartition = new TopicPartition(topic, assignPartition.getPartition());
-            result.addAll(loadMessage(cluster.getBootstrapServers(), topicPartition, offsetPair.getKey(), offsetPair.getValue()));
+        Properties props = new Properties();
+        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, cluster.getBootstrapServers());
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
+            for (KafkaTopicPartition assignPartition : assignPartitions) {
+                Pair<Long, Long> offsetPair = offsetPair(assignPartition.getOffset(), loadRequest.getStartOffset(), loadRequest.getEndOffset());
+                TopicPartition topicPartition = new TopicPartition(topic, assignPartition.getPartition());
+                result.addAll(loadMessage(consumer, topicPartition, offsetPair.getKey(), offsetPair.getValue()));
+            }
         }
+
         return result;
     }
 
@@ -155,29 +164,22 @@ public class TopicServiceImpl implements TopicService {
         return Pair.of(startOffset, endOffset);
     }
 
-    private List<KafkaData<String, String>> loadMessage(String bootstrapServers, TopicPartition topicPartition,
+    private List<KafkaData<String, String>> loadMessage(KafkaConsumer<String, String> consumer, TopicPartition topicPartition,
                                                         long startOffset, long endOffset) {
-        Properties props = new Properties();
-        props.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        Long beginningOffset = consumer.beginningOffsets(Lists.newArrayList(topicPartition)).get(topicPartition);
+
+        consumer.assign(Lists.newArrayList(topicPartition));
+        consumer.seek(topicPartition, Math.max(startOffset, beginningOffset));
 
         List<KafkaData<String, String>> result = Lists.newArrayList();
-        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
-            Long beginningOffset = consumer.beginningOffsets(Lists.newArrayList(topicPartition)).get(topicPartition);
 
-            consumer.assign(Lists.newArrayList(topicPartition));
-            consumer.seek(topicPartition, Math.max(startOffset, beginningOffset));
-
-            ConsumerRecords<String, String> records;
-            Duration timeout = Duration.ofMillis(1000L);
-            while (!(records = consumer.poll(timeout)).isEmpty()) {
-                for (ConsumerRecord<String, String> record : records) {
-                    result.add(KafkaData.convertFromConsumerRecord(record));
-                    if (record.offset() >= endOffset) {
-                        return result;
-                    }
+        ConsumerRecords<String, String> records;
+        Duration timeout = Duration.ofMillis(1000L);
+        while (!(records = consumer.poll(timeout)).isEmpty()) {
+            for (ConsumerRecord<String, String> record : records) {
+                result.add(KafkaData.convertFromConsumerRecord(record));
+                if (record.offset() >= endOffset) {
+                    return result;
                 }
             }
         }
