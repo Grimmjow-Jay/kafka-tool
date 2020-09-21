@@ -402,7 +402,7 @@
                 layer.open({
                     type: 1,
                     title: "编辑Offset",
-                    area: ["650px", "350px"],
+                    area: ["650px", "400px"],
                     content: $('#edit-offset-div').html(),
                     success: function (dom, index) {
                         editOffset(dom, index, obj)
