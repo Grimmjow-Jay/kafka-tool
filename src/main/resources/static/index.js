@@ -70,23 +70,21 @@
     }
 
     function initAddClusterBtn() {
-        $('#add-cluster-btn').on('click', function () {
-            layer.open({
-                type: 1,
-                title: "添加集群",
-                area: ["650px", "300px"],
-                content: $('#add-cluster-div').html(),
-                success: addCluster
-            });
-        });
+        $('#add-cluster-btn').on('click', () => layer.open({
+            type: 1,
+            title: "添加集群",
+            area: ["650px", "300px"],
+            content: $('#add-cluster-div').html(),
+            success: addCluster
+        }));
     }
 
     function addCluster(dom, index) {
         form.render(null, 'add-cluster-filter');
-        form.on('submit(add-cluster-filter)', function (parameters) {
+        form.on('submit(add-cluster-filter)', parameters => {
             const data = parameters.field;
             const url = urls.addCluster;
-            ajaxPost(url, JSON.stringify(data), function () {
+            ajaxPost(url, JSON.stringify(data), () => {
                 layer.msg('添加成功');
                 updateCluster();
                 layer.close(index);
@@ -96,7 +94,7 @@
     }
 
     function bindAddMonitorBtn() {
-        $('#add-monitor-btn').off("click").on('click', function () {
+        $('#add-monitor-btn').off("click").on('click', () => {
             if (!currentCluster) {
                 showErrorInfo("请先选择集群");
                 return;
@@ -113,11 +111,11 @@
 
     function addMonitor(dom, index) {
         form.render();
-        form.on('submit(add-monitor-filter)', function (parameters) {
+        form.on('submit(add-monitor-filter)', parameters => {
             const data = parameters.field;
             data["clusterName"] = currentCluster;
             const url = urls.addMonitor;
-            ajaxPost(url, JSON.stringify(data), function () {
+            ajaxPost(url, JSON.stringify(data), () => {
                 layer.msg('添加成功');
                 layer.close(index);
             });
@@ -138,7 +136,7 @@
         clusterSelectHtml += '</select>';
         $("#cluster-select").html(clusterSelectHtml);
 
-        form.on('select(cluster)', function (elem) {
+        form.on('select(cluster)', elem => {
             if (elem && elem.value && elem.value !== currentCluster) {
                 currentCluster = elem.value;
 
@@ -216,7 +214,7 @@
 
         $('#produce-message').off("click");
 
-        element.on('nav(topic-nav)', function (elem) {
+        element.on('nav(topic-nav)', elem => {
             const topic = elem.text();
             clearTopicDataTable();
             updateTopicDetail(topic);
@@ -271,7 +269,7 @@
         form.render();
 
         $loadMessageTopic.val(topicName);
-        form.on('submit(load-message)', function (parameters) {
+        form.on('submit(load-message)', parameters => {
             const field = parameters.field;
             let url = urls.loadMessage.replace(/{clusterName}/, currentCluster)
                 .replace(/{topic}/, field['topic']);
@@ -308,7 +306,7 @@
     }
 
     function bindProduceMsgBtn(topic) {
-        $('#produce-message').off("click").on('click', function () {
+        $('#produce-message').off("click").on('click', () => {
             if (!currentCluster) {
                 showErrorInfo("请先选择集群");
                 return;
@@ -328,14 +326,14 @@
         form.val('produce-message-form-filter', {
             "topic": topic
         });
-        form.on('submit(produce-message-filter)', function (parameters) {
+        form.on('submit(produce-message-filter)', parameters => {
             const produceMessageUrl = urls.produceMessage
                 .replace(/{clusterName}/, currentCluster)
                 .replace(/{topic}/, topic);
             ajaxPost(produceMessageUrl, JSON.stringify({
                 key: parameters.field.key,
                 message: parameters.field.message
-            }), function () {
+            }), () => {
                 layer.close(index);
                 updateTopicDetail(topic);
                 layer.msg('操作成功', {
@@ -379,7 +377,7 @@
         $manageMonitorConsumerSelect.html(consumerSelectHtml);
         form.render();
 
-        element.on('nav(consumer-nav)', function (elem) {
+        element.on('nav(consumer-nav)', elem => {
             const consumer = elem.text();
             updateConsumerOffsets(consumer);
         });
@@ -389,7 +387,7 @@
         let getConsumerOffsetsUrl = urls.getConsumerOffsets
             .replace(/{clusterName}/, currentCluster)
             .replace(/{consumerName}/, consumer);
-        ajaxGet(getConsumerOffsetsUrl, function (consumerOffsetList) {
+        ajaxGet(getConsumerOffsetsUrl, consumerOffsetList => {
             table.render({
                 elem: '#consumer-offsets-table',
                 data: consumerOffsetList,
@@ -398,17 +396,14 @@
                 },
                 cols: tableCol.consumerOffsets
             });
-            table.on('tool(consumer-offsets-table-filter)', function (obj) {
-                layer.open({
+            table.on('tool(consumer-offsets-table-filter)', obj => layer.open({
                     type: 1,
                     title: "编辑Offset",
                     area: ["650px", "400px"],
                     content: $('#edit-offset-div').html(),
-                    success: function (dom, index) {
-                        editOffset(dom, index, obj)
-                    }
-                });
-            });
+                    success: (dom, index) => editOffset(dom, index, obj)
+                })
+            );
         });
     }
 
@@ -419,7 +414,7 @@
             "topic": obj.data.topic,
             "partition": obj.data.partition
         });
-        form.on('submit(edit-offset-filter)', function (parameters) {
+        form.on('submit(edit-offset-filter)', parameters => {
             let editConsumerOffsetUrl = urls.editConsumerOffset
                 .replace(/{clusterName}/, currentCluster)
                 .replace(/{consumerName}/, parameters.field.consumer);
@@ -427,7 +422,7 @@
                 topic: parameters.field.topic,
                 partition: parameters.field.partition,
                 offset: parameters.field.offset
-            }), function () {
+            }), () => {
                 updateConsumerOffsets(parameters.field.consumer);
                 layer.close(index);
             });
@@ -437,7 +432,7 @@
 
     function bindShowMonitorChart() {
         monitorChart = echarts.init($("#monitor-chart")[0]);
-        form.on('submit(show-monitor)', function (parameters) {
+        form.on('submit(show-monitor)', parameters => {
             const data = parameters.field;
             let timeRange = data['timeRange'];
             if (!timeRange) {
@@ -466,7 +461,7 @@
         monitorDataUrl += '&interval=' + interval;
         monitorDataUrl += '&startTime=' + startTime;
         monitorDataUrl += '&endTime=' + endTime;
-        ajaxGet(monitorDataUrl, function (monitorDataList) {
+        ajaxGet(monitorDataUrl, monitorDataList => {
             monitorDataList = fillInterstice(monitorDataList, interval * 1000);
             const subtext = 'Topic: ' + requestData['topic'] + '   Consumer: ' + requestData['consumer'];
 
@@ -666,7 +661,7 @@
     }
 
     function bindManageMonitorSelectBtn() {
-        form.on('submit(manage-monitor-select)', function (parameters) {
+        form.on('submit(manage-monitor-select)', parameters => {
             const data = parameters.field;
             showManageMonitorTable(data);
             return false;
@@ -713,7 +708,7 @@
         listMonitorUrl += '&consumer=' + requestData['consumer'];
         listMonitorUrl += '&topic=' + requestData['topic'];
 
-        ajaxGet(listMonitorUrl, function (monitorTaskList) {
+        ajaxGet(listMonitorUrl, monitorTaskList => {
             table.render({
                 elem: '#monitor-task-table',
                 data: monitorTaskList,
@@ -722,24 +717,21 @@
                 },
                 cols: tableCol.monitorTask
             });
-            form.on('switch(is-active-checkbox)', function (obj) {
+            form.on('switch(is-active-checkbox)', obj => {
                 let url = obj.elem.checked ? urls.activeMonitor : urls.disableMonitor;
                 const monitorTaskId = obj.elem.id.replace(/monitor-task-/, '');
                 url = url.replace(/{id}/, monitorTaskId);
-                ajaxPut(url, null, doNothing, function (errorMsg) {
-                    layer.open({
+                ajaxPut(url, null, doNothing, errorMsg => layer.open({
                         title: 'Error',
                         content: errorMsg ? errorMsg : 'Error',
-                        end: function () {
-                            form.val('is-active-filter-' + monitorTaskId, {
-                                "isActive": !obj.elem.checked
-                            })
-                        }
-                    });
-                });
+                        end: () => form.val('is-active-filter-' + monitorTaskId, {
+                            "isActive": !obj.elem.checked
+                        })
+                    })
+                );
             });
 
-            form.on('submit(monitor-task-delete-filter)', function (obj) {
+            form.on('submit(monitor-task-delete-filter)', obj => {
                 const monitorTaskId = obj.elem.id.replace(/monitor-task-delete-/, '');
                 layer.open({
                     type: 1,
@@ -747,15 +739,15 @@
                     area: ["260px", "160px"],
                     content: '<div style="padding:20px">确认删除?</div>',
                     btn: ['确认', '取消'],
-                    yes: function (index) {
+                    yes: index => {
                         const url = urls.removeMonitor.replace(/{id}/, monitorTaskId);
                         ajaxDelete(url,
-                            function () {
+                            () => {
                                 layer.close(index);
                                 showManageMonitorTable(requestData);
-                            }, function (errorMsg) {
-                                showErrorInfo(errorMsg);
-                            });
+                            },
+                            errorMsg => showErrorInfo(errorMsg)
+                        );
                     }
                 });
                 return false;
@@ -768,18 +760,12 @@
             url: url,
             type: 'GET',
             dataType: 'json',
-            success: function (result) {
-                ajaxCallback(result, callback)
-            },
-            beforeSend: function () {
-                layerShade = layer.load(1, {
-                    shade: [0.5, '#393D49']
-                });
-            },
-            complete: function () {
-                layer.close(layerShade);
-            },
-            error: function (XMLHttpRequest, errorMsg, error) {
+            success: result => ajaxCallback(result, callback),
+            beforeSend: () => layerShade = layer.load(1, {
+                shade: [0.5, '#393D49']
+            }),
+            complete: () => layer.close(layerShade),
+            error: (XMLHttpRequest, errorMsg, error) => {
                 if (errorCallback) {
                     errorCallback(errorMsg, error);
                 } else {
@@ -796,18 +782,12 @@
             data: data,
             dataType: 'json',
             contentType: 'application/json;charset=UTF-8',
-            success: function (result) {
-                ajaxCallback(result, callback)
-            },
-            beforeSend: function () {
-                layerShade = layer.load(1, {
-                    shade: [0.5, '#393D49']
-                });
-            },
-            complete: function () {
-                layer.close(layerShade);
-            },
-            error: function (XMLHttpRequest, errorMsg, error) {
+            success: result => ajaxCallback(result, callback),
+            beforeSend: () => layerShade = layer.load(1, {
+                shade: [0.5, '#393D49']
+            }),
+            complete: () => layer.close(layerShade),
+            error: (XMLHttpRequest, errorMsg, error) => {
                 if (errorCallback) {
                     errorCallback(errorMsg, error);
                 } else {
@@ -824,18 +804,12 @@
             data: data,
             dataType: 'json',
             contentType: 'application/json;charset=UTF-8',
-            success: function (result) {
-                ajaxCallback(result, callback, errorCallback)
-            },
-            beforeSend: function () {
-                layerShade = layer.load(1, {
-                    shade: [0.5, '#393D49']
-                });
-            },
-            complete: function () {
-                layer.close(layerShade);
-            },
-            error: function (XMLHttpRequest, errorMsg, error) {
+            success: result => ajaxCallback(result, callback, errorCallback),
+            beforeSend: () => layerShade = layer.load(1, {
+                shade: [0.5, '#393D49']
+            }),
+            complete: () => layer.close(layerShade),
+            error: (XMLHttpRequest, errorMsg, error) => {
                 if (errorCallback) {
                     errorCallback(errorMsg, error);
                 } else {
@@ -850,18 +824,12 @@
             url: url,
             type: 'DELETE',
             dataType: 'json',
-            success: function (result) {
-                ajaxCallback(result, callback, errorCallback)
-            },
-            beforeSend: function () {
-                layerShade = layer.load(1, {
-                    shade: [0.5, '#393D49']
-                });
-            },
-            complete: function () {
-                layer.close(layerShade);
-            },
-            error: function (XMLHttpRequest, errorMsg, error) {
+            success: result => ajaxCallback(result, callback, errorCallback),
+            beforeSend: () => layerShade = layer.load(1, {
+                shade: [0.5, '#393D49']
+            }),
+            complete: () => layer.close(layerShade),
+            error: (XMLHttpRequest, errorMsg, error) => {
                 if (errorCallback) {
                     errorCallback(errorMsg, error);
                 } else {
